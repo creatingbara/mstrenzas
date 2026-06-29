@@ -1,0 +1,18 @@
+{
+  "name": "M&S Trenzas",
+  "short_name": "M&S",
+  "description": "Trenzas africanas y extensiones 100% Human Hair con acabado profesional.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff8fc",
+  "theme_color": "#65004d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

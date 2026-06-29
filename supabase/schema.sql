@@ -1,0 +1,288 @@
+-- M&S Trenzas - Esquema Postgres (Supabase)
+-- Espejo del esquema que usa la app. Seguro de re-ejecutar (create ... if not exists).
+--
+-- Este esquema replica el modelo que la aplicación espera: ids de texto, flags
+-- enteros (0/1) y horas/fechas como texto. Los datos por defecto (colaboradoras,
+-- horarios, productos, menús y páginas de agenda) los siembra la propia app la
+-- primera vez que arranca contra una base vacía, así que aquí solo se crean las
+-- tablas.
+--
+-- Cómo usarlo: SQL Editor de Supabase -> pegar este archivo -> Run.
+
+create extension if not exists "pgcrypto";
+
+-- HORARIO GENERAL DEL NEGOCIO
+create table if not exists public.business_hours (
+  id text primary key,
+  day_of_week integer not null unique check (day_of_week >= 0 and day_of_week <= 6),
+  is_active integer not null default 1,
+  start_time text not null default '09:00',
+  end_time text not null default '17:00',
+  slot_interval_minutes integer not null default 60,
+  buffer_minutes integer not null default 0,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+-- EXCEPCIONES DE DISPONIBILIDAD (general)
+create table if not exists public.availability_exceptions (
+  id text primary key,
+  exception_date text not null unique,
+  is_available integer not null default 0,
+  start_time text,
+  end_time text,
+  reason text,
+  created_at text not null default now()::text
+);
+
+-- CITAS
+create table if not exists public.appointment_bookings (
+  id text primary key,
+  service_id text,
+  staff_member_id text,
+  staff_name text,
+  service_name text not null,
+  client_name text not null,
+  phone text not null,
+  instagram text,
+  email text,
+  appointment_date text not null,
+  start_time text not null,
+  end_time text not null,
+  duration_minutes integer not null,
+  status text not null default 'pendiente',
+  notes text,
+  reference_image_url text,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+create index if not exists idx_appointment_bookings_date_status
+  on public.appointment_bookings (appointment_date, status, start_time, end_time);
+
+-- PERFILES (acceso / usuarios)
+create table if not exists public.profiles (
+  id text primary key,
+  username text unique,
+  full_name text not null,
+  email text not null unique,
+  password_hash text,
+  phone text,
+  role text not null default 'colaborador',
+  avatar_url text,
+  is_active integer not null default 1,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+-- COLABORADORES
+create table if not exists public.staff_members (
+  id text primary key,
+  profile_id text,
+  auth_user_id text,
+  username text unique,
+  full_name text not null,
+  email text not null unique,
+  phone text not null,
+  photo_url text,
+  avatar_url text,
+  bio text,
+  role text not null default 'colaborador',
+  is_active integer not null default 1,
+  specialty text,
+  calendar_color text,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+-- SERVICIOS QUE OFRECE CADA COLABORADOR
+create table if not exists public.staff_services (
+  staff_id text not null,
+  service_id text not null,
+  is_active integer not null default 1,
+  created_at text,
+  primary key (staff_id, service_id),
+  foreign key (staff_id) references public.staff_members(id) on delete cascade
+);
+
+-- HORARIO POR COLABORADOR
+create table if not exists public.staff_business_hours (
+  id text primary key,
+  staff_id text not null,
+  day_of_week integer not null check (day_of_week >= 0 and day_of_week <= 6),
+  is_active integer not null default 1,
+  start_time text not null default '09:00',
+  end_time text not null default '17:00',
+  slot_interval_minutes integer not null default 60,
+  buffer_minutes integer not null default 0,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text,
+  unique (staff_id, day_of_week),
+  foreign key (staff_id) references public.staff_members(id) on delete cascade
+);
+
+-- EXCEPCIONES POR COLABORADOR
+create table if not exists public.staff_availability_exceptions (
+  id text primary key,
+  staff_id text not null,
+  exception_date text not null,
+  is_available integer not null default 0,
+  start_time text,
+  end_time text,
+  reason text,
+  created_at text not null default now()::text,
+  unique (staff_id, exception_date),
+  foreign key (staff_id) references public.staff_members(id) on delete cascade
+);
+
+create index if not exists idx_appointment_bookings_staff_date
+  on public.appointment_bookings (staff_member_id, appointment_date, status, start_time, end_time);
+
+-- AJUSTES DEL SITIO (una sola fila, id = 1)
+create table if not exists public.site_settings (
+  id integer primary key check (id = 1),
+  whatsapp text not null default '',
+  instagram text not null default '',
+  zone text not null default '',
+  hours text not null default '',
+  hero_title text not null default '',
+  hero_subtitle text not null default '',
+  booking_policy text not null default '',
+  whatsapp_message text not null default '',
+  updated_at text not null default now()::text
+);
+
+-- MENÚ DE AGENDAR
+create table if not exists public.booking_menu_items (
+  id text primary key,
+  label text not null,
+  href text not null,
+  description text,
+  is_active integer not null default 1,
+  sort_order integer not null default 0,
+  updated_at text not null default now()::text
+);
+
+-- PÁGINAS DE AGENDAR (contenido editable)
+create table if not exists public.agenda_pages (
+  page_key text primary key,
+  eyebrow text not null default '',
+  title text not null default '',
+  subtitle text not null default '',
+  button_label text,
+  button_href text,
+  sections_json text not null default '[]',
+  items_json text not null default '[]',
+  service_slugs_json text not null default '[]',
+  updated_at text not null default now()::text
+);
+
+-- OVERRIDES DE SERVICIOS BASE (los servicios base viven en el código)
+create table if not exists public.service_overrides (
+  service_id text primary key,
+  name text not null,
+  description text not null,
+  category text not null,
+  price_from integer,
+  price_to integer,
+  duration_minutes integer not null,
+  requires_quote integer not null default 1,
+  featured integer not null default 0,
+  active integer not null default 1,
+  image_url text,
+  full_description text,
+  gallery_images_json text not null default '[]',
+  price_label text,
+  duration_label text,
+  booking_enabled integer not null default 1,
+  whatsapp_enabled integer not null default 1,
+  show_staff_selector integer not null default 1,
+  allow_any_staff integer not null default 1,
+  requires_deposit integer not null default 0,
+  deposit_amount integer,
+  show_on_home integer not null default 1,
+  sort_order integer not null default 0,
+  internal_notes text,
+  before_care text,
+  after_care text,
+  whatsapp_message text,
+  prep_minutes integer,
+  buffer_after_minutes integer,
+  recommendations_json text,
+  includes_json text,
+  excludes_json text,
+  updated_at text not null default now()::text
+);
+
+-- SERVICIOS CUSTOM (creados desde el panel)
+create table if not exists public.custom_services (
+  id text primary key,
+  slug text not null unique,
+  name text not null,
+  description text not null,
+  full_description text,
+  category text not null,
+  image_url text not null default '/services/trenzas-africanas.jpg',
+  gallery_images_json text not null default '[]',
+  price_from integer,
+  price_to integer,
+  price_label text,
+  duration_minutes integer not null default 120,
+  duration_label text,
+  requires_quote integer not null default 1,
+  featured integer not null default 0,
+  active integer not null default 1,
+  booking_enabled integer not null default 1,
+  whatsapp_enabled integer not null default 1,
+  show_staff_selector integer not null default 1,
+  allow_any_staff integer not null default 1,
+  requires_deposit integer not null default 0,
+  deposit_amount integer,
+  show_on_home integer not null default 1,
+  sort_order integer not null default 0,
+  internal_notes text,
+  before_care text,
+  after_care text,
+  whatsapp_message text,
+  prep_minutes integer,
+  buffer_after_minutes integer,
+  recommendations_json text not null default '[]',
+  includes_json text not null default '[]',
+  excludes_json text not null default '[]',
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+-- PRODUCTOS / EXTENSIONES
+create table if not exists public.products (
+  id text primary key,
+  name text not null,
+  description text not null,
+  price integer,
+  stock integer,
+  image_url text not null default '/services/extensiones-human-hair.jpg',
+  active integer not null default 1,
+  sort_order integer not null default 0,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+-- Índices únicos parciales para usuarios (coinciden con la app)
+create unique index if not exists idx_profiles_username_unique
+  on public.profiles (username)
+  where username is not null;
+
+create unique index if not exists idx_staff_members_username_unique
+  on public.staff_members (username)
+  where username is not null;
+
+-- STORAGE: buckets públicos para imágenes (servicios, galería, productos,
+-- referencias de citas y fotos de colaboradores).
+insert into storage.buckets (id, name, public)
+values
+  ('services', 'services', true),
+  ('gallery', 'gallery', true),
+  ('products', 'products', true),
+  ('booking-references', 'booking-references', true),
+  ('staff-avatars', 'staff-avatars', true)
+on conflict (id) do update set public = excluded.public;
