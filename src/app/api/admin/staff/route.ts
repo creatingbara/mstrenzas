@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     if (body.temporaryPassword) {
       if (item.profileId) {
-        updateProfilePassword(item.profileId, body.temporaryPassword);
+        await updateProfilePassword(item.profileId, body.temporaryPassword);
       }
       const authUserId = await upsertSupabaseAuthUser({
         email: item.email,

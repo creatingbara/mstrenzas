@@ -22,6 +22,7 @@ export function CollaboratorForm({
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     fullName: staff?.fullName ?? "",
     username: staff?.username ?? "",
@@ -56,7 +57,19 @@ export function CollaboratorForm({
       const result = (await response.json()) as { item?: StaffMember; error?: string; message?: string };
 
       if (!response.ok || !result.item) throw new Error(result.error || "No se pudo guardar.");
-      router.push(`${redirectBasePath}/${result.item.id}`);
+
+      let savedItem = result.item;
+      if (pendingAvatarFile) {
+        savedItem = await uploadAvatarAfterSave(result.item.id, pendingAvatarFile);
+        setPendingAvatarFile(null);
+      }
+
+      setForm((current) => ({
+        ...current,
+        photoUrl: savedItem.photoUrl || "",
+        temporaryPassword: ""
+      }));
+      router.push(`${redirectBasePath}/${savedItem.id}`);
       router.refresh();
       setNotice(result.message || "Colaborador guardado.");
     } catch (error) {
@@ -157,6 +170,7 @@ export function CollaboratorForm({
         fullName={form.fullName}
         currentUrl={form.photoUrl}
         onChange={(avatarUrl) => setForm((current) => ({ ...current, photoUrl: avatarUrl || "" }))}
+        onPendingFile={setPendingAvatarFile}
       />
       <Field label="Bio corta">
         <Textarea value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} />
@@ -211,6 +225,22 @@ export function CollaboratorForm({
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
     </form>
   );
+}
+
+async function uploadAvatarAfterSave(staffId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`/api/admin/staff/${staffId}/avatar`, {
+    method: "POST",
+    body: formData
+  });
+  const result = (await response.json()) as { item?: StaffMember; error?: string };
+  if (!response.ok || !result.item) {
+    throw new Error(result.error || "El miembro se guardo, pero no se pudo subir la foto.");
+  }
+
+  return result.item;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

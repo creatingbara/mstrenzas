@@ -47,3 +47,55 @@ a {
   box-shadow: 0 18px 50px rgba(101, 0, 77, 0.08);
   backdrop-filter: blur(14px);
 }
+
+/* ----------------------------------------------------------------------
+   Modo oscuro del panel administrativo.
+   Scopeado a `.dark .admin-scope` (el <main> del AdminShell) para corregir
+   SOLO el contraste/legibilidad del contenido sin afectar el sitio público
+   ni rediseñar. El sidebar (ya oscuro) y el header (claro) quedan fuera.
+---------------------------------------------------------------------- */
+.dark .admin-scope {
+  color: #f4e9f1;
+}
+
+.dark .admin-scope .text-ink {
+  color: #f4e9f1 !important;
+}
+
+.dark .admin-scope .text-muted {
+  color: #c4b2c0 !important;
+}
+
+.dark .admin-scope .text-cocoa {
+  color: #eaa9d6 !important;
+}
+
+.dark .admin-scope .bg-white {
+  background-color: #26011d !important;
+}
+
+.dark .admin-scope .bg-cream {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark .admin-scope .border-cocoa\/10,
+.dark .admin-scope .border-cocoa\/15,
+.dark .admin-scope .border-cocoa\/20,
+.dark .admin-scope .border-cocoa\/25 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .admin-scope .hair-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dark .admin-scope input::placeholder,
+.dark .admin-scope textarea::placeholder {
+  color: rgba(244, 233, 241, 0.45);
+}
+
+/* Mantener texto oscuro sobre el botón dorado (secundario) en modo oscuro. */
+.dark .admin-scope .bg-gold {
+  color: #171217 !important;
+}

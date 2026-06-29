@@ -15,7 +15,12 @@ export async function GET() {
     return NextResponse.json({ error: "No tienes permiso para ver la configuración." }, { status: 403 });
   }
 
-  return NextResponse.json({ item: await getSiteSettings() });
+  try {
+    return NextResponse.json({ item: await getSiteSettings() });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo cargar la configuracion.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function PUT(request: Request) {
@@ -27,7 +32,13 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "No tienes permiso para editar la configuración." }, { status: 403 });
   }
 
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "La solicitud no contiene JSON valido." }, { status: 400 });
+  }
+
   const parsed = siteSettingsSchema.safeParse(body);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message || "Revisa los datos de configuración.";

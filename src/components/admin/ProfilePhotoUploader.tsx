@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { AvatarUpload } from "@/components/admin/AvatarUpload";
 
-export function CollaboratorPhotoUploader({
-  staffId,
+export function ProfilePhotoUploader({
+  profileId,
   fullName,
   currentUrl,
   onChange,
   onPendingFile
 }: {
-  staffId?: string;
+  profileId: string;
   fullName: string;
   currentUrl?: string | null;
   onChange: (avatarUrl: string | null) => void;
@@ -19,7 +19,6 @@ export function CollaboratorPhotoUploader({
   const [avatarUrl, setAvatarUrl] = useState(currentUrl || null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const disabled = !staffId;
   const initials = fullName
     .split(" ")
     .map((part) => part[0])
@@ -32,7 +31,6 @@ export function CollaboratorPhotoUploader({
   }, [currentUrl]);
 
   async function upload(file: File) {
-    if (!staffId) return;
     setUploading(true);
     setMessage(null);
 
@@ -40,7 +38,7 @@ export function CollaboratorPhotoUploader({
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`/api/admin/staff/${staffId}/avatar`, {
+      const response = await fetch(`/api/admin/users/${profileId}/avatar`, {
         method: "POST",
         body: formData
       });
@@ -58,13 +56,12 @@ export function CollaboratorPhotoUploader({
   }
 
   async function remove() {
-    if (!staffId) return;
-    if (!window.confirm("Eliminar la foto de este colaborador?")) return;
+    if (!window.confirm("Eliminar la foto de este acceso?")) return;
     setUploading(true);
     setMessage(null);
 
     try {
-      const response = await fetch(`/api/admin/staff/${staffId}/avatar`, {
+      const response = await fetch(`/api/admin/users/${profileId}/avatar`, {
         method: "DELETE"
       });
       const result = (await response.json()) as { avatarUrl?: string | null; error?: string; message?: string };
@@ -84,16 +81,13 @@ export function CollaboratorPhotoUploader({
     <div className="grid gap-2">
       <AvatarUpload
         currentUrl={avatarUrl}
-        label={`Foto de ${fullName || "colaborador"}`}
-        disabled={disabled}
+        label={`Foto de ${fullName || "acceso"}`}
         uploading={uploading}
         onUpload={upload}
         onDelete={avatarUrl ? remove : undefined}
         onSelectedFile={onPendingFile}
         initials={initials}
-        uploadLabel={disabled ? "Se subira al guardar" : "Subir foto"}
       />
-      {disabled && <p className="text-sm text-muted">Elige una foto para previsualizarla. Se subira cuando guardes el colaborador.</p>}
       {message && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{message}</p>}
     </div>
   );

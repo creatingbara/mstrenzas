@@ -71,6 +71,12 @@ type StaffMemberRow = {
   calendar_color: string | null;
 };
 
+async function ensureStaffAvatarColumns() {
+  await execute("alter table staff_members add column if not exists avatar_url text");
+  await execute("alter table staff_members add column if not exists photo_url text");
+  await execute("alter table profiles add column if not exists avatar_url text");
+}
+
 type ProfileRow = {
   id: string;
   username: string | null;
@@ -108,6 +114,7 @@ async function seedDatabase() {
   await seedBusinessHours();
   await seedAdminProfile();
   await seedStaffMembers();
+  await ensureSiteSettingsTable();
   await seedSiteSettings();
   await seedBookingMenu();
   await seedAgendaPages();
@@ -266,6 +273,33 @@ async function seedSiteSettings() {
       siteSettings.whatsappMessage
     ]
   );
+}
+
+async function ensureSiteSettingsTable() {
+  await execute(
+    `create table if not exists site_settings (
+      id integer primary key check (id = 1),
+      whatsapp text not null default '',
+      instagram text not null default '',
+      zone text not null default '',
+      hours text not null default '',
+      hero_title text not null default '',
+      hero_subtitle text not null default '',
+      booking_policy text not null default '',
+      whatsapp_message text not null default '',
+      updated_at text not null default now()::text
+    )`
+  );
+
+  await execute("alter table site_settings add column if not exists whatsapp text not null default ''");
+  await execute("alter table site_settings add column if not exists instagram text not null default ''");
+  await execute("alter table site_settings add column if not exists zone text not null default ''");
+  await execute("alter table site_settings add column if not exists hours text not null default ''");
+  await execute("alter table site_settings add column if not exists hero_title text not null default ''");
+  await execute("alter table site_settings add column if not exists hero_subtitle text not null default ''");
+  await execute("alter table site_settings add column if not exists booking_policy text not null default ''");
+  await execute("alter table site_settings add column if not exists whatsapp_message text not null default ''");
+  await execute("alter table site_settings add column if not exists updated_at text not null default now()::text");
 }
 
 async function seedBookingMenu() {
@@ -501,9 +535,11 @@ export async function updateProfileAccess(input: {
   fullName?: string;
   email?: string | null;
   phone?: string | null;
+  avatarUrl?: string | null;
   role?: StaffRole;
   isActive?: boolean;
 }) {
+  await ensureStaffAvatarColumns();
   const profile = await queryOne<ProfileRow>("select * from profiles where id = $1", [input.profileId]);
   if (!profile) return null;
 
@@ -524,7 +560,7 @@ export async function updateProfileAccess(input: {
       fullName: input.fullName?.trim() || staff.fullName,
       email: resolveProfileEmail(input.email, profile.email, username),
       phone: input.phone?.trim() || staff.phone,
-      photoUrl: staff.photoUrl || null,
+      photoUrl: input.avatarUrl === undefined ? staff.photoUrl || null : input.avatarUrl,
       bio: staff.bio || null,
       role: input.role || profile.role,
       isActive: input.isActive ?? Boolean(profile.is_active),
@@ -540,12 +576,13 @@ export async function updateProfileAccess(input: {
   const phone = input.phone?.trim() || profile.phone;
   const role = input.role || profile.role;
   const nextIsActive = input.isActive ?? Boolean(profile.is_active);
+  const avatarUrl = input.avatarUrl === undefined ? profile.avatar_url : input.avatarUrl;
   const row = await queryOne<ProfileRow>(
     `update profiles
-       set username = $1, full_name = $2, email = $3, phone = $4, role = $5, is_active = $6, updated_at = now()::text
-     where id = $7
+       set username = $1, full_name = $2, email = $3, phone = $4, role = $5, is_active = $6, avatar_url = $7, updated_at = now()::text
+     where id = $8
      returning *`,
-    [username, fullName, email, phone, role, nextIsActive ? 1 : 0, profile.id]
+    [username, fullName, email, phone, role, nextIsActive ? 1 : 0, avatarUrl, profile.id]
   );
 
   return row ? mapProfile(row) : null;
@@ -657,6 +694,8 @@ export async function updateStaffAuthUserId(staffId: string, authUserId: string 
 }
 
 export async function setStaffAvatarUrl(staffId: string, avatarUrl: string | null) {
+  await ready();
+  await ensureStaffAvatarColumns();
   const current = await queryOne<StaffMemberRow>("select * from staff_members where id = $1", [staffId]);
   if (!current) return null;
 
@@ -877,6 +916,7 @@ export async function saveStaffMember(input: {
   calendarColor?: string | null;
 }) {
   await ready();
+  await ensureStaffAvatarColumns();
   const id = input.id || randomUUID();
   const username = normalizeUsername(input.username);
   const usernameError = validateUsername(username);
@@ -898,8 +938,8 @@ export async function saveStaffMember(input: {
   });
 
   const row = await queryOne<StaffMemberRow>(
-    `insert into staff_members (id, profile_id, username, full_name, email, phone, photo_url, bio, role, is_active, specialty, calendar_color, updated_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now()::text)
+    `insert into staff_members (id, profile_id, username, full_name, email, phone, photo_url, avatar_url, bio, role, is_active, specialty, calendar_color, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $7, $8, $9, $10, $11, $12, now()::text)
      on conflict (id) do update set
        profile_id = excluded.profile_id,
        username = excluded.username,
@@ -907,6 +947,7 @@ export async function saveStaffMember(input: {
        email = excluded.email,
        phone = excluded.phone,
        photo_url = excluded.photo_url,
+       avatar_url = excluded.avatar_url,
        bio = excluded.bio,
        role = excluded.role,
        is_active = excluded.is_active,
@@ -945,6 +986,7 @@ async function upsertProfileForStaff(input: {
   avatarUrl?: string | null;
   isActive: boolean;
 }) {
+  await ensureStaffAvatarColumns();
   const existing = input.id
     ? await queryOne<ProfileRow>("select * from profiles where id = $1", [input.id])
     : await queryOne<ProfileRow>("select * from profiles where email = $1", [input.email]);
@@ -966,6 +1008,24 @@ async function upsertProfileForStaff(input: {
   );
 
   return id;
+}
+
+export async function setProfileAvatarUrl(profileId: string, avatarUrl: string | null) {
+  await ready();
+  await ensureStaffAvatarColumns();
+
+  const row = await queryOne<ProfileRow>(
+    "update profiles set avatar_url = $1, updated_at = now()::text where id = $2 returning *",
+    [avatarUrl, profileId]
+  );
+  if (!row) return null;
+
+  const staff = await queryOne<StaffMemberRow>("select * from staff_members where profile_id = $1", [profileId]);
+  if (staff) {
+    await execute("update staff_members set photo_url = $1, avatar_url = $1, updated_at = now()::text where id = $2", [avatarUrl, staff.id]);
+  }
+
+  return mapProfile(row);
 }
 
 async function ensureStaffHours(staffId: string) {
@@ -1146,11 +1206,21 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 export async function saveSiteSettings(input: SiteSettings): Promise<SiteSettings> {
   await ready();
   const row = await queryOne<SiteSettingsRow>(
-    `update site_settings
-       set whatsapp = $1, instagram = $2, zone = $3, hours = $4, hero_title = $5,
-           hero_subtitle = $6, booking_policy = $7, whatsapp_message = $8, updated_at = now()::text
-     where id = 1
-     returning *`,
+    `insert into site_settings (
+        id, whatsapp, instagram, zone, hours, hero_title, hero_subtitle, booking_policy, whatsapp_message, updated_at
+      )
+      values (1, $1, $2, $3, $4, $5, $6, $7, $8, now()::text)
+      on conflict (id) do update set
+        whatsapp = excluded.whatsapp,
+        instagram = excluded.instagram,
+        zone = excluded.zone,
+        hours = excluded.hours,
+        hero_title = excluded.hero_title,
+        hero_subtitle = excluded.hero_subtitle,
+        booking_policy = excluded.booking_policy,
+        whatsapp_message = excluded.whatsapp_message,
+        updated_at = now()::text
+      returning *`,
     [
       input.whatsapp.trim(),
       input.instagram.trim(),
@@ -1163,7 +1233,11 @@ export async function saveSiteSettings(input: SiteSettings): Promise<SiteSetting
     ]
   );
 
-  return row ? mapSiteSettings(row) : input;
+  if (!row) {
+    throw new Error("Supabase no devolvio la configuracion guardada.");
+  }
+
+  return mapSiteSettings(row);
 }
 
 // --------------------------------------------------------------------------

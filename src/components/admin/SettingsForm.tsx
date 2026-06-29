@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { SiteSettings } from "@/types/settings";
 
 export function SettingsForm({ settings }: { settings: SiteSettings }) {
+  const router = useRouter();
   const [form, setForm] = useState<SiteSettings>(settings);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ type: "ok" | "error"; message: string } | null>(null);
@@ -28,7 +30,9 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
       const result = (await response.json()) as { item?: SiteSettings; error?: string; message?: string };
 
       if (!response.ok) throw new Error(result.error || "No se pudo guardar la configuración.");
-      if (result.item) setForm(result.item);
+      if (!result.item) throw new Error("Supabase no devolvio la configuracion guardada.");
+      setForm(result.item);
+      router.refresh();
       setStatus({ type: "ok", message: result.message || "Configuración guardada correctamente." });
     } catch (error) {
       setStatus({ type: "error", message: error instanceof Error ? error.message : "No se pudo guardar la configuración." });

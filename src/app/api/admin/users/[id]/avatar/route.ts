@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
-import { updateStaffAvatar } from "@/lib/auth/staff-avatars";
-import { canManageCollaborators } from "@/lib/auth/require-auth";
-import { getStaffMember } from "@/lib/local-db";
+import { updateProfileAvatar } from "@/lib/auth/staff-avatars";
+import { canManageUsers } from "@/lib/auth/require-auth";
+import { getProfileById } from "@/lib/local-db";
 
 export const runtime = "nodejs";
 
@@ -13,12 +13,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const { id } = await params;
-  const staff = await getStaffMember(id);
-  if (!staff) {
-    return NextResponse.json({ error: "Colaborador no encontrado." }, { status: 404 });
+  const profile = await getProfileById(id);
+  if (!profile) {
+    return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
   }
 
-  if (session.role === "colaborador" || !canManageCollaborators(session.role, staff.role)) {
+  if (!canManageUsers(session.role, profile)) {
     return NextResponse.json({ error: "No tienes permiso para cambiar esta foto." }, { status: 403 });
   }
 
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   try {
-    const result = await updateStaffAvatar(id, file);
+    const result = await updateProfileAvatar(id, file);
     return NextResponse.json({ ...result, message: "Foto actualizada correctamente." });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo actualizar la foto.";
@@ -44,17 +44,17 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   }
 
   const { id } = await params;
-  const staff = await getStaffMember(id);
-  if (!staff) {
-    return NextResponse.json({ error: "Colaborador no encontrado." }, { status: 404 });
+  const profile = await getProfileById(id);
+  if (!profile) {
+    return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
   }
 
-  if (session.role === "colaborador" || !canManageCollaborators(session.role, staff.role)) {
+  if (!canManageUsers(session.role, profile)) {
     return NextResponse.json({ error: "No tienes permiso para cambiar esta foto." }, { status: 403 });
   }
 
   try {
-    const result = await updateStaffAvatar(id, null);
+    const result = await updateProfileAvatar(id, null);
     return NextResponse.json({ ...result, message: "Foto eliminada correctamente." });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo eliminar la foto.";
@@ -63,7 +63,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 }
 
 function avatarErrorStatus(message: string) {
-  if (message.includes("jpg") || message.includes("5MB") || message.includes("imagen")) return 400;
-  if (message.includes("configurado")) return 503;
+  if (message.includes("jpg") || message.includes("5MB") || message.includes("imagen valida")) return 400;
+  if (message.includes("no esta configurado")) return 503;
   return 500;
 }

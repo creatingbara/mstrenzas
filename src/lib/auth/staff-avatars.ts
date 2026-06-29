@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getStaffMember, setStaffAvatarUrl } from "@/lib/local-db";
+import { getProfileById, getStaffMember, setProfileAvatarUrl, setStaffAvatarUrl } from "@/lib/local-db";
 
 const BUCKET = "staff-avatars";
-const MAX_FILE_SIZE_MB = 25;
+const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
 const ALLOWED_TYPES = new Map([
   ["image/jpeg", "jpg"],
@@ -12,6 +12,14 @@ const ALLOWED_TYPES = new Map([
 ]);
 
 export async function uploadStaffAvatar(staffId: string, file: File) {
+  return uploadAvatar(`staff/${staffId}`, file);
+}
+
+export async function uploadProfileAvatar(profileId: string, file: File) {
+  return uploadAvatar(`profiles/${profileId}`, file);
+}
+
+async function uploadAvatar(folder: string, file: File) {
   validateAvatarFile(file);
   const bytes = await file.arrayBuffer();
   validateAvatarBytes(file.type, bytes);
@@ -24,7 +32,7 @@ export async function uploadStaffAvatar(staffId: string, file: File) {
   await ensureStaffAvatarBucket();
 
   const extension = ALLOWED_TYPES.get(file.type);
-  const path = `${staffId}/${randomUUID()}.${extension}`;
+  const path = `${folder}/${randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, bytes, {
     contentType: file.type,
     upsert: false
@@ -70,6 +78,25 @@ export async function updateStaffAvatar(staffId: string, file: File | null) {
   }
 
   const item = await setStaffAvatarUrl(staffId, uploaded.publicUrl);
+  return { item, avatarUrl: uploaded.publicUrl };
+}
+
+export async function updateProfileAvatar(profileId: string, file: File | null) {
+  const profile = await getProfileById(profileId);
+  if (!profile) throw new Error("Usuario no encontrado.");
+
+  if (!file) {
+    await deleteStaffAvatar(profile.avatarUrl);
+    const item = await setProfileAvatarUrl(profileId, null);
+    return { item, avatarUrl: null };
+  }
+
+  const uploaded = await uploadProfileAvatar(profileId, file);
+  if (profile.avatarUrl) {
+    await deleteStaffAvatar(profile.avatarUrl).catch(() => null);
+  }
+
+  const item = await setProfileAvatarUrl(profileId, uploaded.publicUrl);
   return { item, avatarUrl: uploaded.publicUrl };
 }
 

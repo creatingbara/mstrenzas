@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProfilePhotoUploader } from "@/components/admin/ProfilePhotoUploader";
 import { displayContactEmail, normalizeUsername } from "@/lib/utils/username";
 import type { StaffRole, UserProfile } from "@/types/staff";
 
@@ -19,11 +20,13 @@ export function TeamAccessForm({
   const router = useRouter();
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     fullName: profile.fullName,
     username: profile.username,
     phone: profile.phone || "",
     email: displayContactEmail(profile.email) === "No indicado" ? "" : profile.email,
+    avatarUrl: profile.avatarUrl || "",
     role: profile.role,
     isActive: profile.isActive,
     temporaryPassword: "",
@@ -60,6 +63,13 @@ export function TeamAccessForm({
       });
       const result = (await response.json()) as { error?: string; message?: string };
       if (!response.ok) throw new Error(result.error || "No se pudo guardar el acceso.");
+
+      if (pendingAvatarFile) {
+        const avatarUrl = await uploadProfileAvatarAfterSave(profile.id, pendingAvatarFile);
+        setPendingAvatarFile(null);
+        setForm((current) => ({ ...current, avatarUrl }));
+      }
+
       setNotice(result.message || "Acceso actualizado correctamente.");
       setForm((current) => ({ ...current, temporaryPassword: "", confirmPassword: "" }));
       router.refresh();
@@ -87,6 +97,15 @@ export function TeamAccessForm({
           <Field label="Email opcional">
             <Input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </Field>
+        </div>
+        <div className="mt-4">
+          <ProfilePhotoUploader
+            profileId={profile.id}
+            fullName={form.fullName}
+            currentUrl={form.avatarUrl}
+            onChange={(avatarUrl) => setForm((current) => ({ ...current, avatarUrl: avatarUrl || "" }))}
+            onPendingFile={setPendingAvatarFile}
+          />
         </div>
       </section>
 
@@ -143,6 +162,22 @@ export function TeamAccessForm({
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
     </form>
   );
+}
+
+async function uploadProfileAvatarAfterSave(profileId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`/api/admin/users/${profileId}/avatar`, {
+    method: "POST",
+    body: formData
+  });
+  const result = (await response.json()) as { avatarUrl?: string | null; error?: string };
+  if (!response.ok) {
+    throw new Error(result.error || "El acceso se guardo, pero no se pudo subir la foto.");
+  }
+
+  return result.avatarUrl || "";
 }
 
 export function RoleSummary({ role }: { role: StaffRole }) {

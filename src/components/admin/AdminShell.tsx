@@ -29,7 +29,7 @@ export function AdminShell({
 
         <div className="min-w-0 flex-1 overflow-x-hidden lg:w-[calc(100vw-307px)] lg:flex-none">
           <AdminHeader session={session} menuControlId={menuControlId} />
-          <main className="min-w-0 px-4 py-7 sm:px-6 lg:px-8 xl:px-10">
+          <main className="admin-scope min-w-0 px-4 py-7 sm:px-6 lg:px-8 xl:px-10">
             <div className="mx-auto grid w-full max-w-[1460px] min-w-0 gap-6">{children}</div>
           </main>
         </div>
