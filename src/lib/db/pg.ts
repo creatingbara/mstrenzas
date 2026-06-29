@@ -1,83 +1,119 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
-/**
- * Conexión Postgres a Supabase.
- *
- * En producción (Vercel/serverless) usa el connection pooler de Supabase
- * (Supavisor, puerto 6543, modo "transaction"). La cadena de conexión se toma
- * de SUPABASE_DB_URL (o DATABASE_URL / POSTGRES_URL como respaldo).
- *
- * Todo el acceso a datos ocurre en el servidor (route handlers y server
- * components), por lo que esta conexión privilegiada nunca llega al cliente.
- */
+type PoolScope = {
+  pool: Pool;
+  dispose: () => Promise<void>;
+};
 
-function getConnectionString() {
-  const url =
+function getHyperdriveConnectionString() {
+  try {
+    const { env } = getCloudflareContext();
+    return (env as { HYPERDRIVE?: { connectionString?: string } }).HYPERDRIVE?.connectionString;
+  } catch {
+    return undefined;
+  }
+}
+
+function getConnectionConfig() {
+  const hyperdriveUrl = getHyperdriveConnectionString();
+  if (hyperdriveUrl) {
+    return { connectionString: hyperdriveUrl, hyperdrive: true };
+  }
+
+  const connectionString =
     process.env.SUPABASE_DB_URL ||
     process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
     process.env.POSTGRES_PRISMA_URL;
 
-  if (!url) {
+  if (!connectionString) {
     throw new Error(
-      "Falta la cadena de conexión a la base de datos. Define SUPABASE_DB_URL (connection pooler de Supabase) en las variables de entorno."
+      "Falta la cadena de conexion a la base de datos. Define SUPABASE_DB_URL en local o configura el binding HYPERDRIVE en Cloudflare."
     );
   }
 
-  return url;
+  return { connectionString, hyperdrive: false };
 }
 
-// Reutiliza el pool entre invocaciones del mismo proceso/lambda.
 const globalForPg = globalThis as unknown as { __msTrenzasPgPool?: Pool };
 
-function getPool(): Pool {
-  if (globalForPg.__msTrenzasPgPool) return globalForPg.__msTrenzasPgPool;
+function createPoolScope(): PoolScope {
+  const { connectionString, hyperdrive } = getConnectionConfig();
 
-  const pool = new Pool({
-    connectionString: getConnectionString(),
-    // Supabase requiere SSL; el pooler usa un certificado que no validamos a fondo.
-    ssl: { rejectUnauthorized: false },
-    // En serverless conviene un pool pequeño y conexiones que se reciclan rápido.
-    max: Number(process.env.PG_POOL_MAX || 3),
-    idleTimeoutMillis: 10_000,
-    connectionTimeoutMillis: 15_000
-  });
+  if (hyperdrive) {
+    const pool = new Pool({
+      connectionString,
+      max: 1,
+      maxUses: 1,
+      idleTimeoutMillis: 1_000,
+      connectionTimeoutMillis: 15_000
+    });
 
-  pool.on("error", (error) => {
-    console.error("Error inesperado en el pool de Postgres", error);
-  });
+    return {
+      pool,
+      dispose: () => pool.end()
+    };
+  }
 
-  globalForPg.__msTrenzasPgPool = pool;
-  return pool;
+  if (!globalForPg.__msTrenzasPgPool) {
+    const pool = new Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: Number(process.env.PG_POOL_MAX || 3),
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 15_000
+    });
+
+    pool.on("error", (error) => {
+      console.error("Error inesperado en el pool de Postgres", error);
+    });
+
+    globalForPg.__msTrenzasPgPool = pool;
+  }
+
+  return {
+    pool: globalForPg.__msTrenzasPgPool,
+    dispose: async () => undefined
+  };
 }
 
-/** Ejecuta una consulta y devuelve todas las filas. */
 export async function query<T extends QueryResultRow = QueryResultRow>(text: string, params: unknown[] = []): Promise<T[]> {
-  const result = await getPool().query<T>(text, params as unknown[]);
-  return result.rows;
+  const { pool, dispose } = createPoolScope();
+  try {
+    const result = await pool.query<T>(text, params as unknown[]);
+    return result.rows;
+  } finally {
+    await dispose();
+  }
 }
 
-/** Ejecuta una consulta y devuelve la primera fila (o undefined). */
 export async function queryOne<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params: unknown[] = []
 ): Promise<T | undefined> {
-  const result = await getPool().query<T>(text, params as unknown[]);
-  return result.rows[0];
+  const { pool, dispose } = createPoolScope();
+  try {
+    const result = await pool.query<T>(text, params as unknown[]);
+    return result.rows[0];
+  } finally {
+    await dispose();
+  }
 }
 
-/** Ejecuta una consulta sin necesidad de resultado; devuelve el número de filas afectadas. */
 export async function execute(text: string, params: unknown[] = []): Promise<number> {
-  const result = await getPool().query(text, params as unknown[]);
-  return result.rowCount ?? 0;
+  const { pool, dispose } = createPoolScope();
+  try {
+    const result = await pool.query(text, params as unknown[]);
+    return result.rowCount ?? 0;
+  } finally {
+    await dispose();
+  }
 }
 
-/**
- * Ejecuta un bloque de operaciones dentro de una transacción.
- * El callback recibe un cliente dedicado; usa client.query(...).
- */
 export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const client = await getPool().connect();
+  const { pool, dispose } = createPoolScope();
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const result = await fn(client);
@@ -88,5 +124,6 @@ export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>)
     throw error;
   } finally {
     client.release();
+    await dispose();
   }
 }
