@@ -15,8 +15,9 @@ Web app profesional para M&S Trenzas: servicios, catálogo, galería, extensione
 ## Requisitos
 
 - Node.js >= 22.5.0
+- pnpm >= 11
 - Una cuenta gratuita de Supabase
-- Una cuenta gratuita de Vercel
+- Una cuenta gratuita de Cloudflare
 
 ## 1. Configurar Supabase
 
@@ -54,8 +55,8 @@ ADMIN_SESSION_SECRET=una-cadena-larga-y-aleatoria
 
 ```bash
 cd ms-trenzas
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Abre `http://localhost:3000`. El panel está en `http://localhost:3000/admin/login`.
@@ -66,7 +67,102 @@ Abre `http://localhost:3000`. El panel está en `http://localhost:3000/admin/log
 > node node_modules/next/dist/bin/next build
 > ```
 
-## 4. Deploy en Vercel
+## 4. Deploy en Cloudflare Workers Free
+
+La app se despliega con OpenNext para Cloudflare Workers. No usa `output: "export"` y conserva SSR, route handlers, middleware y el panel administrativo.
+
+### 4.1 Instalar dependencias
+
+```bash
+pnpm install
+```
+
+El proyecto usa `@opennextjs/cloudflare` y `wrangler`. Wrangler debe ser `3.99.0` o superior; este proyecto usa `^4.105.0`.
+
+### 4.2 Crear cuenta e iniciar sesion
+
+1. Crea una cuenta gratis en [Cloudflare](https://dash.cloudflare.com/).
+2. Inicia sesion con Wrangler:
+
+```bash
+pnpm wrangler login
+```
+
+Verifica la sesion:
+
+```bash
+pnpm wrangler whoami
+```
+
+### 4.3 Configurar variables y secrets
+
+Configura los secrets del Worker:
+
+```bash
+pnpm wrangler secret put NEXT_PUBLIC_SUPABASE_URL
+pnpm wrangler secret put NEXT_PUBLIC_SUPABASE_ANON_KEY
+pnpm wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+pnpm wrangler secret put SUPABASE_DB_URL
+pnpm wrangler secret put ADMIN_USERNAME
+pnpm wrangler secret put ADMIN_EMAIL
+pnpm wrangler secret put ADMIN_PASSWORD
+pnpm wrangler secret put ADMIN_SESSION_SECRET
+pnpm wrangler secret put NEXT_PUBLIC_SITE_URL
+```
+
+Tambien puedes configurarlas en Cloudflare Dashboard: `Workers & Pages` -> `ms-trenzas-demo` -> `Settings` -> `Variables and Secrets`.
+
+Aunque `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` son publicas para el navegador, el Worker tambien las necesita disponibles en runtime/build. `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` son secretos de servidor y nunca deben usarse en componentes cliente.
+
+### 4.4 Probar localmente
+
+```bash
+pnpm build
+pnpm build:cf
+pnpm preview:cf
+```
+
+En Windows, OpenNext puede fallar al crear symlinks durante el build standalone con un error `EPERM: operation not permitted, symlink`. Si ocurre, ejecuta los comandos de Cloudflare desde WSL/Linux o habilita Developer Mode en Windows y vuelve a instalar dependencias con `pnpm install`.
+
+Checklist de prueba:
+
+- La app carga.
+- `/admin` no abre sin sesion.
+- Login funciona con super admin.
+- `/admin/dashboard` funciona.
+- `/admin/equipo` respeta permisos.
+- `/admin/servicios-agenda` funciona.
+- Citas y calendario funcionan.
+- Supabase conecta correctamente.
+- Imagenes de Supabase Storage cargan y se pueden subir desde el admin.
+- No hay errores de TypeScript.
+- No hay errores de hidratacion en consola.
+
+### 4.5 Deploy
+
+Antes del deploy confirma que Wrangler esta autenticado:
+
+```bash
+pnpm wrangler whoami
+```
+
+Luego despliega:
+
+```bash
+pnpm deploy:cf
+```
+
+El Worker se llama `ms-trenzas-demo` en `wrangler.jsonc`. Si el nombre ya existe en tu cuenta, cambia `name` por algo como `ms-trenzas-demo-joela` y vuelve a desplegar. Al finalizar, Cloudflare mostrara la URL publica `workers.dev`.
+
+Despues del primer deploy, actualiza `NEXT_PUBLIC_SITE_URL` con la URL real generada por Cloudflare y vuelve a ejecutar `pnpm deploy:cf`.
+
+### 4.6 Notas del plan Free
+
+- Workers Free sirve bien para una demo, pero tiene limites de CPU, requests y tamaÃ±o de bundle.
+- El proyecto usa Supabase como base de datos y Storage, por lo que Cloudflare no almacena datos de negocio.
+- Esta configuracion usa OpenNext sin cache persistente R2/KV para mantener la demo simple. Si luego necesitas ISR/cache persistente avanzada, agrega R2 o KV segun la documentacion de OpenNext.
+
+## 5. Deploy en Vercel
 
 1. Sube el proyecto a GitHub (la raíz del repo puede contener la carpeta `ms-trenzas/`).
 2. En Vercel → **Add New → Project** → importa el repositorio.
