@@ -21,7 +21,6 @@ export function SelfProfileForm({
   const [form, setForm] = useState({
     email: profile.email,
     phone: staff?.phone || profile.phone || "",
-    instagram: staff?.instagram || profile.instagram || "",
     avatarUrl: staff?.photoUrl || profile.avatarUrl || ""
   });
 
@@ -36,8 +35,7 @@ export function SelfProfileForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
-          phone: form.phone,
-          instagram: form.instagram
+          phone: form.phone
         })
       });
       const result = (await response.json()) as { item?: UserProfile; error?: string; message?: string };
@@ -46,8 +44,7 @@ export function SelfProfileForm({
       setForm((current) => ({
         ...current,
         email: result.item?.email || current.email,
-        phone: result.item?.phone || current.phone,
-        instagram: result.item?.instagram || ""
+        phone: result.item?.phone || current.phone
       }));
       setNotice(result.message || "Perfil actualizado correctamente.");
       router.refresh();
@@ -84,9 +81,6 @@ export function SelfProfileForm({
         </Field>
         <Field label="Numero de telefono">
           <Input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-        </Field>
-        <Field label="Usuario de Instagram">
-          <Input value={form.instagram} onChange={(event) => setForm({ ...form, instagram: event.target.value })} placeholder="@usuario" />
         </Field>
       </section>
 
