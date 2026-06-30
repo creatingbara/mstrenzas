@@ -6,6 +6,7 @@ import { CollaboratorPhotoUploader } from "@/components/admin/CollaboratorPhotoU
 import { ProfilePhotoUploader } from "@/components/admin/ProfilePhotoUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import type { StaffMember, UserProfile } from "@/types/staff";
 
 export function SelfProfileForm({
@@ -21,6 +22,9 @@ export function SelfProfileForm({
   const [form, setForm] = useState({
     email: profile.email,
     phone: staff?.phone || profile.phone || "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
     avatarUrl: staff?.photoUrl || profile.avatarUrl || ""
   });
 
@@ -29,13 +33,22 @@ export function SelfProfileForm({
     setSaving(true);
     setNotice(null);
 
+    if ((form.currentPassword || form.newPassword || form.confirmPassword) && form.newPassword !== form.confirmPassword) {
+      setNotice("La nueva contrasena y la confirmacion no coinciden.");
+      setSaving(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
-          phone: form.phone
+          phone: form.phone,
+          currentPassword: form.currentPassword || null,
+          newPassword: form.newPassword || null,
+          confirmPassword: form.confirmPassword || null
         })
       });
       const result = (await response.json()) as { item?: UserProfile; error?: string; message?: string };
@@ -44,7 +57,10 @@ export function SelfProfileForm({
       setForm((current) => ({
         ...current,
         email: result.item?.email || current.email,
-        phone: result.item?.phone || current.phone
+        phone: result.item?.phone || current.phone,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
       }));
       setNotice(result.message || "Perfil actualizado correctamente.");
       router.refresh();
@@ -82,6 +98,35 @@ export function SelfProfileForm({
         <Field label="Numero de telefono">
           <Input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
         </Field>
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-cocoa/10 bg-cream/50 p-4">
+        <div>
+          <h3 className="font-display text-2xl font-bold text-ink">Cambiar contrasena</h3>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Field label="Contrasena anterior">
+            <PasswordInput
+              value={form.currentPassword}
+              onChange={(event) => setForm({ ...form, currentPassword: event.target.value })}
+              placeholder="Contrasena actual"
+            />
+          </Field>
+          <Field label="Nueva contrasena">
+            <PasswordInput
+              value={form.newPassword}
+              onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
+              placeholder="Minimo 6 caracteres"
+            />
+          </Field>
+          <Field label="Confirmar contrasena">
+            <PasswordInput
+              value={form.confirmPassword}
+              onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
+              placeholder="Repite la nueva"
+            />
+          </Field>
+        </div>
       </section>
 
       <Button type="submit" className="rounded-lg" disabled={saving}>
