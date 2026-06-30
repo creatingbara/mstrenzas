@@ -18,7 +18,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
   }
 
-  if (!canManageUsers(session.role, profile)) {
+  const isOwnProfile = session.profileId === id;
+  if (!isOwnProfile && !canManageUsers(session.role, profile)) {
     return NextResponse.json({ error: "No tienes permiso para cambiar esta foto." }, { status: 403 });
   }
 
@@ -49,7 +50,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
   }
 
-  if (!canManageUsers(session.role, profile)) {
+  const isOwnProfile = session.profileId === id;
+  if (!isOwnProfile && !canManageUsers(session.role, profile)) {
     return NextResponse.json({ error: "No tienes permiso para cambiar esta foto." }, { status: 403 });
   }
 

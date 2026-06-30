@@ -10,6 +10,7 @@ export type StaffMember = {
   fullName: string;
   email: string;
   phone: string;
+  instagram?: string | null;
   photoUrl?: string | null;
   bio?: string | null;
   role: StaffRole;
@@ -27,6 +28,7 @@ export type UserProfile = {
   fullName: string;
   email: string;
   phone?: string | null;
+  instagram?: string | null;
   role: StaffRole;
   avatarUrl?: string | null;
   isActive: boolean;

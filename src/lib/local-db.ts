@@ -63,6 +63,7 @@ type StaffMemberRow = {
   full_name: string;
   email: string;
   phone: string;
+  instagram: string | null;
   photo_url: string | null;
   avatar_url: string | null;
   bio: string | null;
@@ -75,7 +76,9 @@ type StaffMemberRow = {
 async function ensureStaffAvatarColumns() {
   await execute("alter table staff_members add column if not exists avatar_url text");
   await execute("alter table staff_members add column if not exists photo_url text");
+  await execute("alter table staff_members add column if not exists instagram text");
   await execute("alter table profiles add column if not exists avatar_url text");
+  await execute("alter table profiles add column if not exists instagram text");
 }
 
 type ProfileRow = {
@@ -85,6 +88,7 @@ type ProfileRow = {
   email: string;
   password_hash: string | null;
   phone: string | null;
+  instagram: string | null;
   role: StaffRole;
   avatar_url: string | null;
   is_active: number;
@@ -521,6 +525,7 @@ async function mapStaffMember(row: StaffMemberRow): Promise<StaffMember> {
     fullName: row.full_name,
     email: row.email,
     phone: row.phone,
+    instagram: row.instagram,
     photoUrl: row.photo_url || row.avatar_url,
     bio: row.bio,
     role: row.role,
@@ -540,6 +545,7 @@ function mapProfile(row: ProfileRow): UserProfile {
     fullName: row.full_name,
     email: row.email,
     phone: row.phone,
+    instagram: row.instagram,
     role: row.role,
     avatarUrl: row.avatar_url,
     isActive: Boolean(row.is_active),
@@ -609,6 +615,7 @@ export async function updateProfileAccess(input: {
   fullName?: string;
   email?: string | null;
   phone?: string | null;
+  instagram?: string | null;
   avatarUrl?: string | null;
   role?: StaffRole;
   isActive?: boolean;
@@ -634,6 +641,7 @@ export async function updateProfileAccess(input: {
       fullName: input.fullName?.trim() || staff.fullName,
       email: resolveProfileEmail(input.email, profile.email, username),
       phone: input.phone?.trim() || staff.phone,
+      instagram: input.instagram === undefined ? staff.instagram || null : input.instagram?.trim() || null,
       photoUrl: input.avatarUrl === undefined ? staff.photoUrl || null : input.avatarUrl,
       bio: staff.bio || null,
       role: input.role || profile.role,
@@ -648,15 +656,16 @@ export async function updateProfileAccess(input: {
   const email = resolveProfileEmail(input.email, profile.email, username);
   const fullName = input.fullName?.trim() || profile.full_name;
   const phone = input.phone?.trim() || profile.phone;
+  const instagram = input.instagram === undefined ? profile.instagram : input.instagram?.trim() || null;
   const role = input.role || profile.role;
   const nextIsActive = input.isActive ?? Boolean(profile.is_active);
   const avatarUrl = input.avatarUrl === undefined ? profile.avatar_url : input.avatarUrl;
   const row = await queryOne<ProfileRow>(
     `update profiles
-       set username = $1, full_name = $2, email = $3, phone = $4, role = $5, is_active = $6, avatar_url = $7, updated_at = now()::text
-     where id = $8
+       set username = $1, full_name = $2, email = $3, phone = $4, instagram = $5, role = $6, is_active = $7, avatar_url = $8, updated_at = now()::text
+     where id = $9
      returning *`,
-    [username, fullName, email, phone, role, nextIsActive ? 1 : 0, avatarUrl, profile.id]
+    [username, fullName, email, phone, instagram, role, nextIsActive ? 1 : 0, avatarUrl, profile.id]
   );
 
   return row ? mapProfile(row) : null;
@@ -982,6 +991,7 @@ export async function saveStaffMember(input: {
   fullName: string;
   email?: string | null;
   phone: string;
+  instagram?: string | null;
   photoUrl?: string | null;
   bio?: string | null;
   role: StaffRole;
@@ -1010,20 +1020,22 @@ export async function saveStaffMember(input: {
     fullName: input.fullName,
     email,
     phone: input.phone,
+    instagram: input.instagram || null,
     role: input.role,
     avatarUrl: input.photoUrl || null,
     isActive: input.isActive
   });
 
   const row = await queryOne<StaffMemberRow>(
-    `insert into staff_members (id, profile_id, username, full_name, email, phone, photo_url, avatar_url, bio, role, is_active, specialty, calendar_color, updated_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $7, $8, $9, $10, $11, $12, now()::text)
+    `insert into staff_members (id, profile_id, username, full_name, email, phone, instagram, photo_url, avatar_url, bio, role, is_active, specialty, calendar_color, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $8, $9, $10, $11, $12, $13, now()::text)
      on conflict (id) do update set
        profile_id = excluded.profile_id,
        username = excluded.username,
        full_name = excluded.full_name,
        email = excluded.email,
        phone = excluded.phone,
+       instagram = excluded.instagram,
        photo_url = excluded.photo_url,
        avatar_url = excluded.avatar_url,
        bio = excluded.bio,
@@ -1040,6 +1052,7 @@ export async function saveStaffMember(input: {
       input.fullName,
       email,
       input.phone,
+      input.instagram || null,
       input.photoUrl || null,
       input.bio || null,
       input.role,
@@ -1060,6 +1073,7 @@ async function upsertProfileForStaff(input: {
   fullName: string;
   email: string;
   phone: string;
+  instagram?: string | null;
   role: StaffRole;
   avatarUrl?: string | null;
   isActive: boolean;
@@ -1071,18 +1085,19 @@ async function upsertProfileForStaff(input: {
   const id = existing?.id || input.id || randomUUID();
 
   await execute(
-    `insert into profiles (id, username, full_name, email, phone, role, avatar_url, is_active, updated_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, now()::text)
+    `insert into profiles (id, username, full_name, email, phone, instagram, role, avatar_url, is_active, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, now()::text)
      on conflict (id) do update set
        username = excluded.username,
        full_name = excluded.full_name,
        email = excluded.email,
        phone = excluded.phone,
+       instagram = excluded.instagram,
        role = excluded.role,
        avatar_url = excluded.avatar_url,
        is_active = excluded.is_active,
        updated_at = now()::text`,
-    [id, input.username, input.fullName, input.email, input.phone, input.role, input.avatarUrl || null, input.isActive ? 1 : 0]
+    [id, input.username, input.fullName, input.email, input.phone, input.instagram || null, input.role, input.avatarUrl || null, input.isActive ? 1 : 0]
   );
 
   return id;

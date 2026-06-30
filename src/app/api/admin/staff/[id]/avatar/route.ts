@@ -18,7 +18,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Colaborador no encontrado." }, { status: 404 });
   }
 
-  if (session.role === "colaborador" || !canManageCollaborators(session.role, staff.role)) {
+  const isOwnStaff = session.staffMemberId === id;
+  if (!isOwnStaff && (session.role === "colaborador" || !canManageCollaborators(session.role, staff.role))) {
     return NextResponse.json({ error: "No tienes permiso para cambiar esta foto." }, { status: 403 });
   }
 
@@ -49,7 +50,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Colaborador no encontrado." }, { status: 404 });
   }
 
-  if (session.role === "colaborador" || !canManageCollaborators(session.role, staff.role)) {
+  const isOwnStaff = session.staffMemberId === id;
+  if (!isOwnStaff && (session.role === "colaborador" || !canManageCollaborators(session.role, staff.role))) {
     return NextResponse.json({ error: "No tienes permiso para cambiar esta foto." }, { status: 403 });
   }
 

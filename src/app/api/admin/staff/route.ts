@@ -22,6 +22,7 @@ type StaffPayload = {
   fullName?: string;
   email?: string | null;
   phone?: string;
+  instagram?: string | null;
   photoUrl?: string | null;
   bio?: string | null;
   role?: StaffRole;
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
       fullName: body.fullName,
       email,
       phone: body.phone,
+      instagram: body.instagram ?? currentStaff?.instagram ?? null,
       photoUrl: body.photoUrl || null,
       bio: body.bio || null,
       role: desiredRole,
