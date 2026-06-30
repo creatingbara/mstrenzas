@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import { upsertSupabaseAuthUser } from "@/lib/auth/admin-users";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { canManageCollaborators } from "@/lib/auth/require-auth";
 import {
@@ -60,6 +61,8 @@ export async function POST(request: Request) {
   if (!canManageCollaborators(session.role, desiredRole)) {
     return NextResponse.json({ error: "No tienes permiso para asignar este rol." }, { status: 403 });
   }
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   if (currentStaff?.profileId === session.profileId && body.isActive === false) {
     return NextResponse.json({ error: "No puedes desactivar tu propio usuario." }, { status: 400 });
@@ -146,6 +149,8 @@ export async function DELETE(request: Request) {
     if (!canManageCollaborators(session.role, currentStaff.role)) {
       return NextResponse.json({ error: "No tienes permiso para modificar este colaborador." }, { status: 403 });
     }
+    const criticalError = requireCriticalPasskey(request, session);
+    if (criticalError) return criticalError;
     if (currentStaff.profileId === session.profileId) {
       return NextResponse.json({ error: "No puedes desactivar o eliminar tu propio usuario." }, { status: 400 });
     }

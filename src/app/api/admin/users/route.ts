@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import { syncProfileAndStaffMember, updateUserPassword, updateUserUsername } from "@/lib/auth/admin-users";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { canManageUsers } from "@/lib/auth/require-auth";
 import { deleteUserProfile, getProfileById, getProfiles, setProfileActive } from "@/lib/local-db";
@@ -50,6 +51,8 @@ export async function PATCH(request: Request) {
   if (!canManageUsers(session.role, targetProfile)) {
     return NextResponse.json({ error: "No tienes permiso para modificar este usuario." }, { status: 403 });
   }
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   const nextRole = body.role || targetProfile.role;
   if (!canManageUsers(session.role, { ...targetProfile, role: nextRole })) {
@@ -127,6 +130,8 @@ export async function DELETE(request: Request) {
   if (!canManageUsers(session.role, targetProfile)) {
     return NextResponse.json({ error: "No tienes permiso para modificar este usuario." }, { status: 403 });
   }
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   const activeSuperAdmins = (await getProfiles()).filter((profile) => profile.role === "super_admin" && profile.isActive);
   if (targetProfile.role === "super_admin" && activeSuperAdmins.length <= 1) {

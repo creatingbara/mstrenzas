@@ -2,6 +2,7 @@
 
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { CriticalPasskeyGate } from "@/components/admin/CriticalPasskeyGate";
 import type { AdminSession } from "@/lib/auth/admin-session";
 
 export function AdminShell({
@@ -15,6 +16,7 @@ export function AdminShell({
 
   return (
     <section className="min-h-screen bg-[#fff7fc] transition-colors dark:bg-[#13000f]">
+      <CriticalPasskeyGate session={session} />
       <input id={menuControlId} type="checkbox" className="peer sr-only" aria-hidden="true" />
       <div className="fixed inset-0 z-50 hidden peer-checked:block lg:hidden">
         <label htmlFor={menuControlId} className="absolute inset-0 bg-ink/45" aria-label="Cerrar menu administrativo" />

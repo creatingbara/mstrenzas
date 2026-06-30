@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/auth/admin-session";
 import { updateUserPassword } from "@/lib/auth/admin-users";
 import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { getProfileById, updateProfileAccess, verifyLocalProfilePassword } from "@/lib/local-db";
@@ -82,14 +83,37 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Perfil no encontrado." }, { status: 404 });
     }
 
+    let responseItem = item;
     if (wantsPasswordChange && body.newPassword) {
       await updateUserPassword(item, body.newPassword);
+      responseItem = (await getProfileById(item.id)) || item;
     }
 
-    return NextResponse.json({
-      item,
+    const response = NextResponse.json({
+      item: responseItem,
       message: wantsPasswordChange ? "Perfil y contrasena actualizados correctamente." : "Perfil actualizado correctamente."
     });
+
+    if (wantsPasswordChange) {
+      const token = await createAdminSessionToken({
+        profileId: responseItem.id,
+        username: responseItem.username,
+        role: responseItem.role,
+        staffMemberId: session.staffMemberId || null,
+        avatarUrl: session.avatarUrl || responseItem.avatarUrl || null,
+        passwordChangeRequired: false
+      });
+
+      response.cookies.set(ADMIN_SESSION_COOKIE, token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 8
+      });
+    }
+
+    return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo actualizar el perfil.";
     return NextResponse.json({ error: message }, { status: 500 });

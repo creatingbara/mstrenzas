@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { hasPermission } from "@/lib/auth/permissions";
 import { createCustomService, deleteService, getServices, updateServiceOverride } from "@/lib/local-db";
 import { serviceCreateSchema, serviceOverrideSchema } from "@/lib/validations";
@@ -26,6 +27,9 @@ export async function PUT(request: Request) {
   if (!hasPermission(session.role, "manage_services")) {
     return NextResponse.json({ error: "No tienes permiso para editar servicios." }, { status: 403 });
   }
+
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   const body = await request.json();
   const parsed = serviceOverrideSchema.safeParse(body);
@@ -58,6 +62,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No tienes permiso para crear servicios." }, { status: 403 });
   }
 
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
+
   const body = await request.json();
   const parsed = serviceCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -82,6 +89,9 @@ export async function DELETE(request: Request) {
   if (!hasPermission(session.role, "manage_services")) {
     return NextResponse.json({ error: "No tienes permiso para eliminar servicios." }, { status: 403 });
   }
+
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   const { searchParams } = new URL(request.url);
   const serviceId = searchParams.get("serviceId");

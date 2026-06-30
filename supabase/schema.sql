@@ -100,6 +100,20 @@ create table if not exists public.staff_members (
   updated_at text not null default now()::text
 );
 
+-- PASSKEYS / WEBAUTHN (solo claves publicas; no almacena biometria)
+create table if not exists public.user_passkeys (
+  id text primary key,
+  user_id text not null,
+  credential_id text not null unique,
+  public_key text not null,
+  counter bigint not null default 0,
+  transports text not null default '[]',
+  device_name text,
+  created_at text not null default now()::text,
+  last_used_at text,
+  foreign key (user_id) references public.profiles(id) on delete cascade
+);
+
 -- SERVICIOS QUE OFRECE CADA COLABORADOR
 create table if not exists public.staff_services (
   staff_id text not null,

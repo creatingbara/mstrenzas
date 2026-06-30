@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CollaboratorPhotoUploader } from "@/components/admin/CollaboratorPhotoUploader";
+import { PasskeySecurityPanel } from "@/components/admin/PasskeySecurityPanel";
 import { ProfilePhotoUploader } from "@/components/admin/ProfilePhotoUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,6 +136,8 @@ export function SelfProfileForm({
           </Field>
         </div>
       </section>
+
+      <PasskeySecurityPanel />
 
       <Button type="submit" className="rounded-lg" disabled={saving}>
         {saving ? "Guardando..." : "Guardar perfil"}

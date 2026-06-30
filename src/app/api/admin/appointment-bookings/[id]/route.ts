@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { canViewAppointment } from "@/lib/auth/require-auth";
 import { hasPermission } from "@/lib/auth/permissions";
 import { deleteAppointmentBooking, getAdminAppointmentById, updateAppointmentStatus } from "@/lib/local-db";
@@ -30,6 +31,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!canViewAppointment(session, current)) {
       return NextResponse.json({ error: "No autorizado." }, { status: 403 });
     }
+    const criticalResponse = requireCriticalPasskey(request, session);
+    if (criticalResponse) {
+      return criticalResponse;
+    }
 
     const item = await updateAppointmentStatus(id, body.status);
     if (!item) {
@@ -43,13 +48,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
   if (!hasPermission(session.role, "manage_bookings")) {
     return NextResponse.json({ error: "No tienes permiso para eliminar citas." }, { status: 403 });
+  }
+  const criticalResponse = requireCriticalPasskey(request, session);
+  if (criticalResponse) {
+    return criticalResponse;
   }
 
   const { id } = await params;

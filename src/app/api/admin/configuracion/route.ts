@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { canManageSettings } from "@/lib/auth/permissions";
 import { getSiteSettings, saveSiteSettings } from "@/lib/local-db";
 import { siteSettingsSchema } from "@/lib/validations";
@@ -31,6 +32,9 @@ export async function PUT(request: Request) {
   if (!canManageSettings(session.role)) {
     return NextResponse.json({ error: "No tienes permiso para editar la configuración." }, { status: 403 });
   }
+
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   let body: unknown;
   try {

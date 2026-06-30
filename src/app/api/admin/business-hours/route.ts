@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { hasPermission } from "@/lib/auth/permissions";
 import { saveBusinessHours } from "@/lib/local-db";
 import type { BusinessHour } from "@/types/appointment";
@@ -13,6 +14,10 @@ export async function PUT(request: Request) {
   }
   if (!hasPermission(session.role, "manage_availability")) {
     return NextResponse.json({ error: "No tienes permiso para gestionar disponibilidad." }, { status: 403 });
+  }
+  const criticalResponse = requireCriticalPasskey(request, session);
+  if (criticalResponse) {
+    return criticalResponse;
   }
 
   const body = (await request.json()) as { items?: BusinessHour[] };

@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
     username: normalizedUsername,
     role,
     staffMemberId: staff?.id || null,
-    avatarUrl: profile?.avatar_url || staff?.photoUrl || null
+    avatarUrl: profile?.avatar_url || staff?.photoUrl || null,
+    passwordChangeRequired: mustChangePassword
   });
   const response = NextResponse.json({
     ok: true,

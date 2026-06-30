@@ -183,6 +183,9 @@ async function seedBusinessHours() {
 }
 
 async function seedAdminProfile() {
+  const existingSuperAdmin = await queryOne<{ id: string }>("select id from profiles where role = 'super_admin' and is_active = 1 limit 1");
+  if (existingSuperAdmin) return;
+
   const adminEmail = process.env.ADMIN_EMAIL || "admin@ms-trenzas.local";
   const existing = await queryOne<{ id: string }>("select id from profiles where email = $1", [adminEmail]);
   if (existing) return;

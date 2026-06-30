@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { canManageCollaborators } from "@/lib/auth/require-auth";
 import { getStaffMember, saveStaffBusinessHours } from "@/lib/local-db";
 import type { BusinessHour } from "@/types/appointment";
@@ -26,6 +27,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!canManageCollaborators(session.role, staff.role)) {
       return NextResponse.json({ error: "No tienes permiso para modificar este colaborador." }, { status: 403 });
     }
+    const criticalError = requireCriticalPasskey(request, session);
+    if (criticalError) return criticalError;
 
     const items = await saveStaffBusinessHours(id, body.items ?? []);
     return NextResponse.json({ items });

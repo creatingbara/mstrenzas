@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
+import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { hasPermission } from "@/lib/auth/permissions";
 import { getBookingMenuItems, saveBookingMenuItems } from "@/lib/local-db";
 import { bookingMenuSchema } from "@/lib/validations";
@@ -26,6 +27,9 @@ export async function PUT(request: Request) {
   if (!hasPermission(session.role, "manage_services")) {
     return NextResponse.json({ error: "No tienes permiso para editar Agenda Cita." }, { status: 403 });
   }
+
+  const criticalError = requireCriticalPasskey(request, session);
+  if (criticalError) return criticalError;
 
   const body = await request.json();
   const parsed = bookingMenuSchema.safeParse(body);

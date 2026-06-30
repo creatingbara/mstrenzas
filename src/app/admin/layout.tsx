@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const profilePath = `/admin/equipo/${session.staffMemberId || session.profileId}`;
-  if (session.passwordChangeRequired && pathname !== profilePath) {
+  if (session.passwordChangeRequired && pathname && pathname !== profilePath) {
     redirect(`${profilePath}?password=required`);
   }
 
