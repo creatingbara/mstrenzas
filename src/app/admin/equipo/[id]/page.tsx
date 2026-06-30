@@ -41,7 +41,7 @@ export default async function EditTeamMemberPage({ params }: { params: Promise<{
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-cocoa">Equipo y Accesos</p>
           <h2 className="mt-2 text-3xl font-black text-ink md:text-4xl">
-            {session.role === "colaborador" ? "Configuracion del perfil" : staff ? "Editar miembro" : "Editar acceso"}
+            {isOwnRecord ? "Configuracion del perfil" : staff ? "Editar miembro" : "Editar acceso"}
           </h2>
           <p className="mt-2 text-sm text-muted">{staff?.fullName || profile?.fullName}</p>
         </div>
@@ -50,7 +50,7 @@ export default async function EditTeamMemberPage({ params }: { params: Promise<{
         </Link>
       </div>
 
-      {session.role === "colaborador" && profile ? (
+      {isOwnRecord && profile ? (
         <SelfProfileForm profile={profile} staff={staff} />
       ) : staff ? (
         <TeamMemberForm staff={staff} actorRole={session.role} />

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import { syncProfileAndStaffMember, updateUserPassword, updateUserUsername } from "@/lib/auth/admin-users";
+import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { canManageUsers } from "@/lib/auth/require-auth";
 import { deleteUserProfile, getProfileById, getProfiles, setProfileActive } from "@/lib/local-db";
 import { normalizeUsername, validateUsername } from "@/lib/utils/username";
@@ -59,6 +60,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "No puedes desactivar tu propio usuario." }, { status: 400 });
   }
 
+  if (body.temporaryPassword) {
+    const passwordError = passwordPolicyMessage(body.temporaryPassword);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
+    }
+  }
+
   try {
     if (username !== targetProfile.username) {
       await updateUserUsername(targetProfile, username);
@@ -79,7 +87,7 @@ export async function PATCH(request: Request) {
     }
 
     if (body.temporaryPassword) {
-      await updateUserPassword(profile, body.temporaryPassword);
+      await updateUserPassword(profile, body.temporaryPassword, { forceChange: true });
     }
 
     return NextResponse.json({

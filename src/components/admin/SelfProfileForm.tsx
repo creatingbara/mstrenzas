@@ -73,6 +73,12 @@ export function SelfProfileForm({
 
   return (
     <form onSubmit={submit} className="grid gap-5 rounded-lg border border-cocoa/10 bg-white p-5 shadow-soft">
+      {profile.forcePasswordChange && (
+        <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">
+          Debes cambiar tu contrasena para continuar usando el panel.
+        </p>
+      )}
+
       <section className="grid gap-4">
         {staff ? (
           <CollaboratorPhotoUploader
@@ -103,6 +109,7 @@ export function SelfProfileForm({
       <section className="grid gap-4 rounded-lg border border-cocoa/10 bg-cream/50 p-4">
         <div>
           <h3 className="font-display text-2xl font-bold text-ink">Cambiar contrasena</h3>
+          <p className="mt-1 text-sm text-muted">Usa mayusculas, minusculas, numeros y un caracter especial.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <Field label="Contrasena anterior">
@@ -116,7 +123,7 @@ export function SelfProfileForm({
             <PasswordInput
               value={form.newPassword}
               onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
-              placeholder="Minimo 6 caracteres"
+              placeholder="Minimo 8 caracteres"
             />
           </Field>
           <Field label="Confirmar contrasena">

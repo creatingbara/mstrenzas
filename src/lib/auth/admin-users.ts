@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { createUserProfile, getProfileById, updateProfileAccess, updateProfilePassword } from "@/lib/local-db";
 import { internalEmailForUsername, isInternalUsernameEmail, normalizeUsername, validateUsername } from "@/lib/utils/username";
 import type { StaffRole, UserProfile } from "@/types/staff";
@@ -16,6 +17,10 @@ type UserAccessInput = {
 export async function createUserWithUsername(input: UserAccessInput) {
   const username = normalizeAndValidateUsername(input.username);
   const email = input.email?.trim() || internalEmailForUsername(username);
+  if (input.temporaryPassword) {
+    const passwordError = passwordPolicyMessage(input.temporaryPassword);
+    if (passwordError) throw new Error(passwordError);
+  }
 
   const profile = await createUserProfile({
     username,
@@ -27,7 +32,7 @@ export async function createUserWithUsername(input: UserAccessInput) {
   });
 
   if (profile && input.temporaryPassword) {
-    await updateProfilePassword(profile.id, input.temporaryPassword);
+    await updateProfilePassword(profile.id, input.temporaryPassword, { forceChange: true });
     await upsertSupabaseAuthUser({
       email,
       password: input.temporaryPassword,
@@ -57,12 +62,15 @@ export async function updateUserUsername(profile: UserProfile, username: string)
   });
 }
 
-export async function updateUserPassword(profile: UserProfile, temporaryPassword: string) {
+export async function updateUserPassword(profile: UserProfile, temporaryPassword: string, options?: { forceChange?: boolean }) {
   if (!temporaryPassword.trim()) {
     throw new Error("Escribe una contraseña temporal.");
   }
 
-  await updateProfilePassword(profile.id, temporaryPassword);
+  const passwordError = passwordPolicyMessage(temporaryPassword);
+  if (passwordError) throw new Error(passwordError);
+
+  await updateProfilePassword(profile.id, temporaryPassword, { forceChange: options?.forceChange ?? false });
   await upsertSupabaseAuthUser({
     email: profile.email,
     password: temporaryPassword,

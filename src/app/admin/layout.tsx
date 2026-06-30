@@ -34,5 +34,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect(session.role === "colaborador" ? "/admin/mi-calendario" : "/admin/dashboard");
   }
 
+  const profilePath = `/admin/equipo/${session.staffMemberId || session.profileId}`;
+  if (session.passwordChangeRequired && pathname !== profilePath) {
+    redirect(`${profilePath}?password=required`);
+  }
+
   return <AdminShell session={session}>{children}</AdminShell>;
 }

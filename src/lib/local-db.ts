@@ -81,6 +81,17 @@ async function ensureStaffAvatarColumns() {
   await execute("alter table profiles add column if not exists instagram text");
 }
 
+let profileSecurityColumnsPromise: Promise<void> | null = null;
+
+function ensureProfileSecurityColumns() {
+  profileSecurityColumnsPromise ??= (async () => {
+    await execute("alter table profiles add column if not exists force_password_change integer not null default 0");
+    await execute("alter table profiles add column if not exists password_history text not null default '[]'");
+    await execute("alter table profiles add column if not exists password_updated_at text");
+  })();
+  return profileSecurityColumnsPromise;
+}
+
 type ProfileRow = {
   id: string;
   username: string | null;
@@ -92,6 +103,9 @@ type ProfileRow = {
   role: StaffRole;
   avatar_url: string | null;
   is_active: number;
+  force_password_change: number;
+  password_history: string | null;
+  password_updated_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -549,6 +563,7 @@ function mapProfile(row: ProfileRow): UserProfile {
     role: row.role,
     avatarUrl: row.avatar_url,
     isActive: Boolean(row.is_active),
+    forcePasswordChange: Boolean(row.force_password_change),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -704,22 +719,57 @@ function resolveProfileEmail(nextEmail: string | null | undefined, currentEmail:
   return isInternalUsernameEmail(currentEmail) ? internalEmailForUsername(username) : currentEmail;
 }
 
-export async function updateProfilePassword(profileId: string, password: string) {
+export async function updateProfilePassword(
+  profileId: string,
+  password: string,
+  { forceChange = false }: { forceChange?: boolean } = {}
+) {
   if (!password.trim()) throw new Error("Escribe una contraseña temporal.");
 
+  await ensureProfileSecurityColumns();
+
+  const current = await queryOne<Pick<ProfileRow, "password_hash" | "password_history">>(
+    "select password_hash, password_history from profiles where id = $1",
+    [profileId]
+  );
+  if (!current) return null;
+
+  const previousHashes = [current.password_hash, ...parsePasswordHistory(current.password_history)].filter(Boolean) as string[];
+  if (previousHashes.some((hash) => verifyPassword(password, hash))) {
+    throw new Error("Esa contrasena ya fue utilizada. Elige una diferente.");
+  }
+
   const passwordHash = hashPassword(password);
-  const row = await queryOne<ProfileRow>("update profiles set password_hash = $1, updated_at = now()::text where id = $2 returning *", [
-    passwordHash,
-    profileId
-  ]);
+  const passwordHistory = JSON.stringify(previousHashes.slice(0, 5));
+  const row = await queryOne<ProfileRow>(
+    `update profiles
+        set password_hash = $1,
+            password_history = $2,
+            force_password_change = $3,
+            password_updated_at = now()::text,
+            updated_at = now()::text
+      where id = $4
+      returning *`,
+    [passwordHash, passwordHistory, forceChange ? 1 : 0, profileId]
+  );
 
   return row ? mapProfile(row) : null;
 }
 
 export async function verifyLocalProfilePassword(profileId: string, password: string) {
+  await ensureProfileSecurityColumns();
   const row = await queryOne<{ password_hash: string | null }>("select password_hash from profiles where id = $1", [profileId]);
   if (!row?.password_hash) return false;
   return verifyPassword(password, row.password_hash);
+}
+
+export async function setProfilePasswordChangeRequired(profileId: string, required: boolean) {
+  await ensureProfileSecurityColumns();
+  const row = await queryOne<ProfileRow>(
+    "update profiles set force_password_change = $1, updated_at = now()::text where id = $2 returning *",
+    [required ? 1 : 0, profileId]
+  );
+  return row ? mapProfile(row) : null;
 }
 
 function hashPassword(password: string) {
@@ -737,18 +787,31 @@ function verifyPassword(password: string, passwordHash: string) {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
+function parsePasswordHistory(value: string | null | undefined) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getProfileByUsername(username: string) {
+  await ensureProfileSecurityColumns();
   const row = await queryOne<ProfileRow>("select * from profiles where username = $1", [normalizeUsername(username)]);
   return row ? mapProfile(row) : null;
 }
 
 export async function getProfileById(id: string) {
+  await ensureProfileSecurityColumns();
   const row = await queryOne<ProfileRow>("select * from profiles where id = $1", [id]);
   return row ? mapProfile(row) : null;
 }
 
 export async function getProfileAuthByUsername(username: string) {
   await ready();
+  await ensureProfileSecurityColumns();
   const row = await queryOne<ProfileRow>("select * from profiles where username = $1", [normalizeUsername(username)]);
   return row || null;
 }

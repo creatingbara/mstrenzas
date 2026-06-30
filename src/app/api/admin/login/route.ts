@@ -2,7 +2,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/auth/admin-session";
-import { getProfileAuthByUsername, getStaffMemberByProfileId, verifyLocalProfilePassword } from "@/lib/local-db";
+import { isStrongPassword } from "@/lib/auth/password-policy";
+import { getProfileAuthByUsername, getStaffMemberByProfileId, setProfilePasswordChangeRequired, verifyLocalProfilePassword } from "@/lib/local-db";
 import { normalizeUsername } from "@/lib/utils/username";
 
 export const runtime = "nodejs";
@@ -64,6 +65,12 @@ export async function POST(request: NextRequest) {
   loginAttempts.delete(attemptKey);
 
   const role = profile?.role || "super_admin";
+  const weakPasswordDetected = Boolean(profile && !isStrongPassword(password));
+  if (profile && weakPasswordDetected) {
+    await setProfilePasswordChangeRequired(profile.id, true);
+  }
+  const mustChangePassword = Boolean(profile?.force_password_change || weakPasswordDetected);
+  const profilePath = profile ? `/admin/equipo/${staff?.id || profile.id}` : "/admin/dashboard";
   const token = await createAdminSessionToken({
     profileId: profile?.id || "local-admin",
     username: normalizedUsername,
@@ -73,7 +80,7 @@ export async function POST(request: NextRequest) {
   });
   const response = NextResponse.json({
     ok: true,
-    redirectTo: role === "colaborador" ? "/admin/mi-calendario" : "/admin/dashboard"
+    redirectTo: mustChangePassword ? `${profilePath}?password=required` : role === "colaborador" ? "/admin/mi-calendario" : "/admin/dashboard"
   });
 
   response.cookies.set(ADMIN_SESSION_COOKIE, token, {

@@ -31,7 +31,8 @@ export async function getAdminSession() {
     username: profile.username,
     role: profile.role,
     staffMemberId: staff?.id ?? null,
-    avatarUrl: profile.avatarUrl || staff?.photoUrl || null
+    avatarUrl: profile.avatarUrl || staff?.photoUrl || null,
+    passwordChangeRequired: profile.forcePasswordChange ?? false
   };
 }
 

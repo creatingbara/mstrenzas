@@ -32,6 +32,7 @@ export type UserProfile = {
   role: StaffRole;
   avatarUrl?: string | null;
   isActive: boolean;
+  forcePasswordChange?: boolean;
   createdAt?: string | null;
   updatedAt?: string | null;
 };

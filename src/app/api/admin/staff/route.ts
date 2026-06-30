@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import { upsertSupabaseAuthUser } from "@/lib/auth/admin-users";
+import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { canManageCollaborators } from "@/lib/auth/require-auth";
 import {
   deleteStaffMember,
@@ -68,6 +69,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: usernameError || "Nombre, usuario y teléfono son requeridos." }, { status: 400 });
   }
 
+  if (body.temporaryPassword) {
+    const passwordError = passwordPolicyMessage(body.temporaryPassword);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
+    }
+  }
+
   try {
     const email = body.email?.trim() || internalEmailForUsername(username);
     const item = await saveStaffMember({
@@ -90,7 +98,7 @@ export async function POST(request: Request) {
 
     if (body.temporaryPassword) {
       if (item.profileId) {
-        await updateProfilePassword(item.profileId, body.temporaryPassword);
+        await updateProfilePassword(item.profileId, body.temporaryPassword, { forceChange: true });
       }
       const authUserId = await upsertSupabaseAuthUser({
         email: item.email,

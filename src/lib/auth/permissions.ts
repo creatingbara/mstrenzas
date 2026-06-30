@@ -51,7 +51,7 @@ export function canAccessAdminPath(role: StaffRole, pathname: string) {
     return false;
   }
 
-  return pathname === "/admin/mi-calendario";
+  return pathname === "/admin/mi-calendario" || pathname.startsWith("/admin/equipo/");
 }
 
 export function canManageUsers(actorRole: StaffRole, target?: UserProfile | null) {

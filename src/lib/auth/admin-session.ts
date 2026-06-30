@@ -8,6 +8,7 @@ export type AdminSession = {
   role: StaffRole;
   staffMemberId?: string | null;
   avatarUrl?: string | null;
+  passwordChangeRequired?: boolean;
 };
 
 type SessionPayload = AdminSession & {
@@ -42,7 +43,8 @@ export async function verifyAdminSessionToken(token?: string | null): Promise<Ad
       username: payload.username,
       role: payload.role,
       staffMemberId: payload.staffMemberId ?? null,
-      avatarUrl: payload.avatarUrl ?? null
+      avatarUrl: payload.avatarUrl ?? null,
+      passwordChangeRequired: payload.passwordChangeRequired ?? false
     };
   } catch {
     return null;

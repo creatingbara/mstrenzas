@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getAdminSession } from "@/lib/admin-auth";
 import { updateUserPassword } from "@/lib/auth/admin-users";
+import { passwordPolicyMessage } from "@/lib/auth/password-policy";
 import { getProfileById, updateProfileAccess, verifyLocalProfilePassword } from "@/lib/local-db";
 
 export const runtime = "nodejs";
@@ -36,6 +37,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Escribe un correo valido." }, { status: 400 });
   }
 
+  if (profile.forcePasswordChange && !wantsPasswordChange) {
+    return NextResponse.json({ error: "Debes cambiar tu contrasena para continuar." }, { status: 400 });
+  }
+
   if (wantsPasswordChange) {
     if (!body.currentPassword || !body.newPassword || !body.confirmPassword) {
       return NextResponse.json({ error: "Completa la contrasena anterior, la nueva y la confirmacion." }, { status: 400 });
@@ -43,8 +48,12 @@ export async function PATCH(request: Request) {
     if (body.newPassword !== body.confirmPassword) {
       return NextResponse.json({ error: "La nueva contrasena y la confirmacion no coinciden." }, { status: 400 });
     }
-    if (body.newPassword.trim().length < 6) {
-      return NextResponse.json({ error: "La nueva contrasena debe tener al menos 6 caracteres." }, { status: 400 });
+    const passwordError = passwordPolicyMessage(body.newPassword);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
+    }
+    if (body.currentPassword === body.newPassword) {
+      return NextResponse.json({ error: "Esa contrasena ya fue utilizada. Elige una diferente." }, { status: 400 });
     }
 
     const passwordMatches =
