@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { CollaboratorForm } from "@/components/admin/CollaboratorForm";
 import { RoleSummary } from "@/components/admin/TeamAccessForm";
@@ -11,11 +14,13 @@ export function TeamMemberForm({
   staff?: StaffMember | null;
   actorRole: StaffRole;
 }) {
+  const [selectedRole, setSelectedRole] = useState<StaffRole>(staff?.role ?? "colaborador");
+
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <CollaboratorForm staff={staff} actorRole={actorRole} redirectBasePath="/admin/equipo" />
+      <CollaboratorForm staff={staff} actorRole={actorRole} redirectBasePath="/admin/equipo" onRoleChange={setSelectedRole} />
       <aside className="grid content-start gap-4">
-        <RoleSummary role={staff?.role ?? "colaborador"} />
+        <RoleSummary role={selectedRole} />
         {staff && (
           <section className="rounded-lg border border-cocoa/10 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-cocoa">Acciones rapidas</p>

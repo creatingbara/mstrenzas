@@ -31,6 +31,8 @@ type StaffPayload = {
   temporaryPassword?: string | null;
 };
 
+const staffRoles: StaffRole[] = ["super_admin", "admin", "colaborador"];
+
 export async function POST(request: Request) {
   const session = await getAdminSession();
   if (!session) {
@@ -44,6 +46,9 @@ export async function POST(request: Request) {
   const username = normalizeUsername(body.username || "");
   const usernameError = validateUsername(username);
   const currentStaff = body.id ? await getStaffMember(body.id) : null;
+  if (body.role && !staffRoles.includes(body.role)) {
+    return NextResponse.json({ error: "Rol invalido." }, { status: 400 });
+  }
   const desiredRole = body.role || currentStaff?.role || "colaborador";
 
   if (currentStaff && !canManageCollaborators(session.role, currentStaff.role)) {

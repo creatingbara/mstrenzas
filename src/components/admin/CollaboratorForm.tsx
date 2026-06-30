@@ -13,11 +13,13 @@ import type { StaffMember, StaffRole } from "@/types/staff";
 export function CollaboratorForm({
   staff,
   actorRole,
-  redirectBasePath = "/admin/colaboradores"
+  redirectBasePath = "/admin/colaboradores",
+  onRoleChange
 }: {
   staff?: StaffMember | null;
   actorRole: StaffRole;
   redirectBasePath?: string;
+  onRoleChange?: (role: StaffRole) => void;
 }) {
   const router = useRouter();
   const [notice, setNotice] = useState<string | null>(null);
@@ -67,9 +69,19 @@ export function CollaboratorForm({
 
       setForm((current) => ({
         ...current,
+        fullName: savedItem.fullName,
+        username: savedItem.username,
+        email: isInternalUsernameEmail(savedItem.email) ? "" : savedItem.email,
+        phone: savedItem.phone,
         photoUrl: savedItem.photoUrl || "",
+        bio: savedItem.bio || "",
+        role: savedItem.role,
+        isActive: savedItem.isActive,
+        specialty: savedItem.specialty || "",
+        calendarColor: savedItem.calendarColor || "#8B5E3C",
         temporaryPassword: ""
       }));
+      onRoleChange?.(savedItem.role);
       router.push(`${redirectBasePath}/${savedItem.id}`);
       router.refresh();
       setNotice(result.message || "Colaborador guardado.");
@@ -142,7 +154,11 @@ export function CollaboratorForm({
           <select
             className="min-h-11 rounded-lg border border-cocoa/20 bg-white px-3"
             value={form.role}
-            onChange={(event) => setForm({ ...form, role: event.target.value as StaffRole })}
+            onChange={(event) => {
+              const nextRole = event.target.value as StaffRole;
+              setForm({ ...form, role: nextRole });
+              onRoleChange?.(nextRole);
+            }}
           >
             <option value="colaborador">Colaborador</option>
             {actorRole === "super_admin" && <option value="admin">Admin</option>}

@@ -62,7 +62,7 @@ export function TeamAccessForm({
           temporaryPassword: form.temporaryPassword || null
         })
       });
-      const result = (await response.json()) as { error?: string; message?: string };
+      const result = (await response.json()) as { item?: UserProfile; error?: string; message?: string };
       if (!response.ok) throw new Error(result.error || "No se pudo guardar el acceso.");
 
       if (pendingAvatarFile) {
@@ -72,7 +72,18 @@ export function TeamAccessForm({
       }
 
       setNotice(result.message || "Acceso actualizado correctamente.");
-      setForm((current) => ({ ...current, temporaryPassword: "", confirmPassword: "" }));
+      setForm((current) => ({
+        ...current,
+        fullName: result.item?.fullName ?? current.fullName,
+        username: result.item?.username ?? current.username,
+        phone: result.item?.phone ?? current.phone,
+        email: result.item?.email ? (displayContactEmail(result.item.email) === "No indicado" ? "" : result.item.email) : current.email,
+        avatarUrl: result.item?.avatarUrl ?? current.avatarUrl,
+        role: result.item?.role ?? current.role,
+        isActive: result.item?.isActive ?? current.isActive,
+        temporaryPassword: "",
+        confirmPassword: ""
+      }));
       router.refresh();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo guardar el acceso.");

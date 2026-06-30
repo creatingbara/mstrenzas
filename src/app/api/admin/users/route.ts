@@ -19,6 +19,8 @@ type UserPayload = {
   temporaryPassword?: string | null;
 };
 
+const staffRoles: StaffRole[] = ["super_admin", "admin", "colaborador"];
+
 export async function PATCH(request: Request) {
   const session = await getAdminSession();
   if (!session) {
@@ -31,6 +33,9 @@ export async function PATCH(request: Request) {
   const body = (await request.json()) as UserPayload;
   const username = normalizeUsername(body.username || "");
   const usernameError = validateUsername(username);
+  if (body.role && !staffRoles.includes(body.role)) {
+    return NextResponse.json({ error: "Rol invalido." }, { status: 400 });
+  }
 
   if (!body.profileId || usernameError) {
     return NextResponse.json({ error: usernameError || "Falta el usuario." }, { status: 400 });
