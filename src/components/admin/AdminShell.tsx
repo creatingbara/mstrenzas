@@ -22,15 +22,15 @@ export function AdminShell({
           <AdminSidebar session={session} />
         </div>
       </div>
-      <div className="flex min-h-screen w-full">
-        <div className="hidden w-[292px] shrink-0 lg:block">
+      <div className="min-h-screen w-full lg:pl-[292px]">
+        <div className="fixed inset-y-0 left-0 z-40 hidden w-[292px] overflow-y-auto lg:block">
           <AdminSidebar session={session} />
         </div>
 
-        <div className="min-w-0 flex-1 overflow-x-hidden lg:w-[calc(100vw-307px)] lg:flex-none">
+        <div className="min-w-0 overflow-x-hidden">
           <AdminHeader session={session} menuControlId={menuControlId} />
           <main className="admin-scope min-w-0 px-4 py-7 sm:px-6 lg:px-8 xl:px-10">
-            <div className="mx-auto grid w-full max-w-[1460px] min-w-0 gap-6">{children}</div>
+            <div className="mx-auto grid w-full max-w-[1460px] min-w-0 gap-6 has-[.admin-full-width]:max-w-none">{children}</div>
           </main>
         </div>
       </div>

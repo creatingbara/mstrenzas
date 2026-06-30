@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { ProfilePhotoUploader } from "@/components/admin/ProfilePhotoUploader";
 import { displayContactEmail, normalizeUsername } from "@/lib/utils/username";
 import type { StaffRole, UserProfile } from "@/types/staff";
@@ -136,16 +137,14 @@ export function TeamAccessForm({
             </select>
           </Field>
           <Field label="Nueva contrasena temporal">
-            <Input
-              type="password"
+            <PasswordInput
               value={form.temporaryPassword}
               onChange={(event) => setForm({ ...form, temporaryPassword: event.target.value })}
               placeholder="Dejar vacio para no cambiar"
             />
           </Field>
           <Field label="Confirmar contrasena temporal">
-            <Input
-              type="password"
+            <PasswordInput
               value={form.confirmPassword}
               onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
               placeholder="Repite la contrasena"

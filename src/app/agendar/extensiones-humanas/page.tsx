@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getAgendaPage } from "@/lib/local-db";
+import { getAgendaPage, getSiteSettings } from "@/lib/local-db";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
-function resolveHref(value?: string | null) {
+function resolveHref(value: string | null | undefined, whatsappPhone: string) {
   if (!value) return null;
-  if (value.startsWith("whatsapp:")) return whatsappLink(value.replace("whatsapp:", ""));
+  if (value.startsWith("whatsapp:")) return whatsappLink(value.replace("whatsapp:", ""), whatsappPhone);
   return value;
 }
 
 export default async function BookHumanHairPage() {
-  const page = await getAgendaPage("extensiones-humanas");
-  const href = resolveHref(page.buttonHref);
+  const [page, settings] = await Promise.all([getAgendaPage("extensiones-humanas"), getSiteSettings()]);
+  const href = resolveHref(page.buttonHref, settings.whatsapp);
 
   return (
     <section className="section-pad">

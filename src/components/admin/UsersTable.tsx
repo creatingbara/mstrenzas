@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Edit3, KeyRound, Power, PowerOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { displayContactEmail, normalizeUsername } from "@/lib/utils/username";
 import type { StaffRole, UserProfile } from "@/types/staff";
 
@@ -146,7 +147,57 @@ export function UsersTable({
   return (
     <div className="grid gap-3">
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
-      <div className="overflow-x-auto rounded-lg border border-cocoa/10 bg-white">
+      <div className="grid gap-3 md:hidden">
+        {sortedProfiles.map((profile) => (
+          <article key={profile.id} className="rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">
+                {profile.fullName.slice(0, 2).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-lg font-black text-ink">{profile.fullName}</p>
+                <p className="text-sm font-semibold text-cocoa">@{profile.username}</p>
+                <p className="mt-1 truncate text-sm text-muted">{profile.phone || "Sin telefono"} - {displayContactEmail(profile.email)}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+              <Info label="Rol" value={roleLabel(profile.role)} />
+              <Info label="Estado" value={profile.isActive ? "Activo" : "Inactivo"} />
+              <Info label="Creacion" value={formatDate(profile.createdAt)} />
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <Button type="button" variant="outline" disabled={!canEdit(profile)} onClick={() => openEditor(profile)}>
+                <Edit3 size={16} />
+                Editar
+              </Button>
+              <Button type="button" variant="ghost" disabled={!canEdit(profile)} onClick={() => openEditor(profile, true)}>
+                <KeyRound size={16} />
+                Restablecer
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!canDeactivate(profile) || savingId === profile.id}
+                onClick={() => updateUserLifecycle(profile, profile.isActive ? "deactivate" : "activate")}
+              >
+                {profile.isActive ? <PowerOff size={16} /> : <Power size={16} />}
+                {profile.isActive ? "Desactivar" : "Activar"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!canDeactivate(profile) || savingId === profile.id}
+                onClick={() => updateUserLifecycle(profile, "delete")}
+              >
+                <Trash2 size={16} />
+                Eliminar
+              </Button>
+            </div>
+          </article>
+        ))}
+        {!profiles.length && <p className="rounded-lg bg-white p-4 text-sm text-muted shadow-sm">No hay usuarios registrados.</p>}
+      </div>
+      <div className="hidden overflow-x-auto rounded-lg border border-cocoa/10 bg-white md:block">
         <table className="w-full min-w-[1180px] text-left text-sm">
           <thead className="bg-cream text-xs uppercase tracking-[0.14em] text-cocoa">
             <tr>
@@ -279,8 +330,7 @@ export function UsersTable({
               </label>
               <label className="grid gap-2 text-sm font-semibold md:col-span-2">
                 Nueva contraseña temporal
-                <Input
-                  type="password"
+                <PasswordInput
                   value={editingDraft.temporaryPassword}
                   onChange={(event) => updateDraft(editingProfile.id, { temporaryPassword: event.target.value })}
                   placeholder="Escribe solo si deseas cambiarla"
@@ -334,4 +384,13 @@ function roleWeight(role: StaffRole) {
 function formatDate(date?: string | null) {
   if (!date) return "No indicado";
   return new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" }).format(new Date(date));
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="rounded-lg bg-cream/60 px-3 py-2">
+      <span className="block text-xs font-bold uppercase tracking-[0.12em] text-cocoa">{label}</span>
+      <span className="mt-1 block truncate font-semibold text-ink">{value}</span>
+    </span>
+  );
 }

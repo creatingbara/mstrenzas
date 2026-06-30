@@ -3,12 +3,11 @@ import Link from "next/link";
 import { CalendarDays, Clock, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { siteSettings } from "@/lib/data";
 import { formatDuration, formatPrice } from "@/lib/utils";
 import { whatsappLink } from "@/lib/whatsapp";
 import type { Service } from "@/types/service";
 
-export function ServiceCard({ service }: { service: Service }) {
+export function ServiceCard({ service, whatsappPhone }: { service: Service; whatsappPhone: string }) {
   const serviceKey = service.slug || service.id;
   const bookingHref = `/agendar/servicio/${serviceKey}`;
   const message = service.whatsappMessage || `Hola M&S Trenzas, quiero consultar por el servicio: ${service.name}.`;
@@ -44,7 +43,7 @@ export function ServiceCard({ service }: { service: Service }) {
               </Link>
             )}
             {canWhatsApp && (
-              <Link href={whatsappLink(message, siteSettings.whatsapp)} target="_blank" className={canBook ? undefined : "flex-1"}>
+              <Link href={whatsappLink(message, whatsappPhone)} target="_blank" className={canBook ? undefined : "flex-1"}>
                 <Button variant={canBook ? "outline" : "primary"} className={canBook ? undefined : "w-full"} aria-label="Consultar por WhatsApp">
                   <MessageCircle size={18} />
                   {!canBook && "Cotizar por WhatsApp"}

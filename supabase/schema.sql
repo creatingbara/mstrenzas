@@ -153,6 +153,20 @@ create table if not exists public.site_settings (
 );
 
 -- MENÚ DE AGENDAR
+-- GALERIA (fotos manuales y enlaces a Instagram sin scraping)
+create table if not exists public.gallery_items (
+  id text primary key,
+  title text,
+  category text not null default '',
+  image_url text,
+  instagram_url text,
+  featured integer not null default 0,
+  is_active integer not null default 1,
+  sort_order integer not null default 0,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
 create table if not exists public.booking_menu_items (
   id text primary key,
   label text not null,

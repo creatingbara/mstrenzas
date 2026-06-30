@@ -1,14 +1,14 @@
 import { ServiceCard } from "@/components/public/ServiceCard";
-import { getAgendaPage, getServices } from "@/lib/local-db";
+import { getAgendaPage, getServices, getSiteSettings } from "@/lib/local-db";
 
 export const dynamic = "force-dynamic";
 
 export default async function BookMenPage() {
-  const page = await getAgendaPage("caballero");
-  const services = (await getServices()).filter((service) => service.active !== false);
+  const [page, services, settings] = await Promise.all([getAgendaPage("caballero"), getServices(), getSiteSettings()]);
+  const activeServices = services.filter((service) => service.active !== false);
   const items = page.serviceSlugs
-    .map((slug) => services.find((service) => service.slug === slug))
-    .filter(Boolean) as typeof services;
+    .map((slug) => activeServices.find((service) => service.slug === slug))
+    .filter(Boolean) as typeof activeServices;
 
   return (
     <section className="section-pad">
@@ -20,7 +20,7 @@ export default async function BookMenPage() {
         </div>
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {items.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+            <ServiceCard key={service.id} service={service} whatsappPhone={settings.whatsapp} />
           ))}
         </div>
       </div>

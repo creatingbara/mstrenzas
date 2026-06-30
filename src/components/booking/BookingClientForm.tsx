@@ -20,6 +20,7 @@ export function BookingClientForm({
   staffName,
   selectedDate,
   selectedTime,
+  whatsappPhone,
   onBooked
 }: {
   service: Service;
@@ -27,6 +28,7 @@ export function BookingClientForm({
   staffName: string;
   selectedDate: Date;
   selectedTime: string;
+  whatsappPhone: string;
   onBooked: (appointment: AppointmentBooking) => void;
 }) {
   const [successLink, setSuccessLink] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export function BookingClientForm({
 
       onBooked(result.item);
       setNotice("Horario reservado provisionalmente. Te contactaremos para confirmar.");
-      setSuccessLink(whatsappLink(whatsappMessage));
+      setSuccessLink(whatsappLink(whatsappMessage, whatsappPhone));
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo guardar la cita.");
     }
@@ -134,4 +136,3 @@ function Field({ label, error, children }: { label: string; error?: string; chil
     </label>
   );
 }
-

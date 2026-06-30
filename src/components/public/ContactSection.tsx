@@ -3,10 +3,12 @@ import { CalendarDays, Clock, Instagram, MapPin, MessageCircle } from "lucide-re
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { siteSettings } from "@/lib/data";
 import { whatsappLink } from "@/lib/whatsapp";
+import type { SiteSettings } from "@/types/settings";
 
-export function ContactSection() {
+export function ContactSection({ settings }: { settings: SiteSettings }) {
+  const instagramValue = formatInstagramHandle(settings.instagram);
+
   return (
     <section className="section-pad">
       <div className="container-shell grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -17,10 +19,10 @@ export function ContactSection() {
             Escríbenos por WhatsApp para consultas rápidas o entra al calendario para seleccionar servicio, fecha y hora disponible.
           </p>
           <div className="mt-8 grid gap-3">
-            <Info icon={<MessageCircle size={20} />} label="WhatsApp" value="Cotizaciones y citas" href={whatsappLink(siteSettings.whatsappMessage)} />
-            <Info icon={<Instagram size={20} />} label="Instagram" value="@mystrenzas_mechyrd" href={siteSettings.instagram} />
-            <Info icon={<MapPin size={20} />} label="Zona" value={siteSettings.zone} />
-            <Info icon={<Clock size={20} />} label="Horarios" value={siteSettings.hours} />
+            <Info icon={<MessageCircle size={20} />} label="WhatsApp" value="Cotizaciones y citas" href={whatsappLink(settings.whatsappMessage, settings.whatsapp)} />
+            <Info icon={<Instagram size={20} />} label="Instagram" value={instagramValue} href={settings.instagram} />
+            <Info icon={<MapPin size={20} />} label="Zona" value={settings.zone} />
+            <Info icon={<Clock size={20} />} label="Horarios" value={settings.hours} />
           </div>
         </div>
         <Card className="flex flex-col justify-center">
@@ -30,13 +32,13 @@ export function ContactSection() {
             Elige el estilo que deseas, revisa los horarios disponibles y envía tu solicitud de cita desde el flujo actualizado.
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <Link href="/agendar/catalogo-trenzas">
+            <Link href="/catalogo">
               <Button className="w-full">
                 <CalendarDays size={18} />
                 Ver catálogo y agendar
               </Button>
             </Link>
-            <Link href={whatsappLink(siteSettings.whatsappMessage)} target="_blank">
+            <Link href={whatsappLink(settings.whatsappMessage, settings.whatsapp)} target="_blank">
               <Button variant="outline" className="w-full">
                 <MessageCircle size={18} />
                 WhatsApp
@@ -47,6 +49,20 @@ export function ContactSection() {
       </div>
     </section>
   );
+}
+
+function formatInstagramHandle(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "Instagram";
+  if (trimmed.startsWith("@")) return trimmed;
+
+  try {
+    const url = new URL(trimmed);
+    const handle = url.pathname.split("/").filter(Boolean)[0];
+    return handle ? `@${handle}` : trimmed;
+  } catch {
+    return trimmed;
+  }
 }
 
 function Info({ icon, label, value, href }: { icon: ReactNode; label: string; value: string; href?: string }) {

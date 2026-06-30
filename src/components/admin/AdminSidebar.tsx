@@ -7,12 +7,10 @@ import {
   CalendarDays,
   Gauge,
   ImageIcon,
-  LogOut,
   Package,
   Settings,
   Users
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { AdminSession } from "@/lib/auth/admin-session";
 import { cn } from "@/lib/utils";
 import type { StaffRole } from "@/types/staff";
@@ -58,12 +56,6 @@ const collaboratorGroups: AdminNavGroup[] = [
   }
 ];
 
-const roleLabels: Record<StaffRole, string> = {
-  super_admin: "Super admin",
-  admin: "Admin",
-  colaborador: "Colaborador"
-};
-
 function getGroupsForRole(role: StaffRole) {
   if (role === "super_admin") return superAdminGroups;
   if (role === "admin") return adminGroups;
@@ -83,11 +75,6 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
   const visibleGroups = getGroupsForRole(session.role);
-
-  async function signOut() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin";
-  }
 
   return (
     <aside className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top_left,rgba(193,132,168,0.42),transparent_28%),linear-gradient(180deg,#320024_0%,#1b0019_100%)] p-4 text-white">
@@ -128,24 +115,6 @@ export function AdminSidebar({
           </div>
         ))}
       </nav>
-
-      <div className="mt-auto grid gap-4 pt-8">
-        <div className="rounded-lg border border-white/12 bg-white/8 p-4">
-          <div className="flex items-center gap-3">
-            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white text-sm font-black text-cocoa">
-              {session.username.slice(0, 2).toUpperCase()}
-            </span>
-            <span className="min-w-0">
-              <p className="truncate text-sm font-bold text-white">{session.username}</p>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/70">{roleLabels[session.role]}</p>
-            </span>
-          </div>
-        </div>
-        <Button type="button" variant="ghost" className="w-full justify-start rounded-lg px-4 text-base text-white hover:bg-white/10" onClick={signOut}>
-          <LogOut size={18} />
-          Cerrar sesion
-        </Button>
-      </div>
     </aside>
   );
 }

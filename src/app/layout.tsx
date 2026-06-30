@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import type { ReactNode } from "react";
 import { PublicChrome } from "@/components/public/PublicChrome";
+import { getSiteSettings } from "@/lib/local-db";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -31,7 +32,11 @@ export const viewport: Viewport = {
   initialScale: 1
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const settings = await getSiteSettings();
+
   return (
     <html
       lang="es"
@@ -40,7 +45,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       className={`${inter.variable} ${playfair.variable}`}
     >
       <body className="font-sans">
-        <PublicChrome>{children}</PublicChrome>
+        <PublicChrome settings={settings}>{children}</PublicChrome>
       </body>
     </html>
   );

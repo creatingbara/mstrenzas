@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import { hasPermission } from "@/lib/auth/permissions";
-import { createCustomService, getServices, updateServiceOverride } from "@/lib/local-db";
+import { createCustomService, deleteService, getServices, updateServiceOverride } from "@/lib/local-db";
 import { serviceCreateSchema, serviceOverrideSchema } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -70,6 +70,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ item, message: "Servicio creado correctamente." });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo crear el servicio.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const session = await getAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+  if (!hasPermission(session.role, "manage_services")) {
+    return NextResponse.json({ error: "No tienes permiso para eliminar servicios." }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const serviceId = searchParams.get("serviceId");
+  if (!serviceId) {
+    return NextResponse.json({ error: "Falta el servicio." }, { status: 400 });
+  }
+
+  try {
+    const item = await deleteService(serviceId);
+    if (!item) return NextResponse.json({ error: "Servicio no encontrado." }, { status: 404 });
+    return NextResponse.json({ item, message: "Servicio eliminado correctamente." });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo eliminar el servicio.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

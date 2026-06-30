@@ -12,10 +12,10 @@ export default async function AdminCalendarPage() {
   const { appointments, exceptions } = await getAdminAppointmentData();
 
   return (
-    <section>
+    <section className="admin-full-width w-full max-w-none">
       <div className="mb-5">
         <h2 className="font-display text-3xl font-bold">Calendario administrativo</h2>
-        <p className="mt-2 text-sm text-muted">Vista por día de citas, estados y bloqueos.</p>
+        <p className="mt-2 text-sm text-muted">Vista mensual visual de citas, estados, colaboradores y bloqueos.</p>
       </div>
       <AdminCalendarView appointments={appointments} exceptions={exceptions} />
     </section>

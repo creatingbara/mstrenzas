@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { CollaboratorPhotoUploader } from "@/components/admin/CollaboratorPhotoUploader";
 import { isInternalUsernameEmail, normalizeUsername } from "@/lib/utils/username";
@@ -185,8 +186,7 @@ export function CollaboratorForm({
             <Input value={form.username} onChange={(event) => setForm({ ...form, username: normalizeUsername(event.target.value) })} required />
           </Field>
           <Field label="Nueva contraseña temporal">
-            <Input
-              type="password"
+            <PasswordInput
               value={form.temporaryPassword}
               onChange={(event) => setForm({ ...form, temporaryPassword: event.target.value })}
               placeholder={staff ? "Dejar vacío para no cambiar" : "Contraseña temporal"}

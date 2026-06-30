@@ -49,7 +49,40 @@ export function ServicesTable({ initialServices }: { initialServices: Service[] 
           {status.message}
         </p>
       )}
-      <div className="overflow-x-auto rounded-lg border border-cocoa/10 bg-white">
+      <div className="grid gap-3 md:hidden">
+        {items.map((service) => (
+          <article key={service.id} className="rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="line-clamp-1 text-lg font-black text-ink">{service.name}</p>
+                <p className="mt-1 text-sm font-semibold text-cocoa">{service.category}</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">
+                {service.active ? "Activo" : "Inactivo"}
+              </span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+              <Info label="Precio" value={formatPrice(service.priceFrom, service.requiresQuote)} />
+              <Info label="Duracion" value={formatDuration(service.durationMinutes)} />
+              <Info label="Destacado" value={service.featured ? "Si" : "No"} />
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <Button type="button" variant="outline" onClick={() => setEditingId(service.id)}>
+                Editar
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busyId === service.id}
+                onClick={() => persist(service.id, { active: !service.active })}
+              >
+                {busyId === service.id ? "..." : service.active ? "Desactivar" : "Activar"}
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto rounded-lg border border-cocoa/10 bg-white md:block">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-cream text-xs uppercase tracking-[0.14em] text-cocoa">
             <tr>
@@ -216,5 +249,14 @@ function ServiceEditor({
         </Button>
       </div>
     </div>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="rounded-lg bg-cream/60 px-3 py-2">
+      <span className="block text-xs font-bold uppercase tracking-[0.12em] text-cocoa">{label}</span>
+      <span className="mt-1 block truncate font-semibold text-ink">{value}</span>
+    </span>
   );
 }

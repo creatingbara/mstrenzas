@@ -6,8 +6,9 @@ import { Footer } from "@/components/public/Footer";
 import { Header } from "@/components/public/Header";
 import { PWARegister } from "@/components/public/PWARegister";
 import { WhatsAppFloatingButton } from "@/components/public/WhatsAppFloatingButton";
+import type { SiteSettings } from "@/types/settings";
 
-export function PublicChrome({ children }: { children: ReactNode }) {
+export function PublicChrome({ children, settings }: { children: ReactNode; settings: SiteSettings }) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
 
@@ -21,12 +22,12 @@ export function PublicChrome({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
+    <div className="public-scope min-h-screen">
       <Header />
       <main>{children}</main>
-      <Footer />
-      <WhatsAppFloatingButton />
+      <Footer settings={settings} />
+      <WhatsAppFloatingButton settings={settings} />
       <PWARegister />
-    </>
+    </div>
   );
 }

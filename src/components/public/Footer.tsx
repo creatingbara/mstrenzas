@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Instagram, MessageCircle, Sparkles } from "lucide-react";
-import { siteSettings } from "@/lib/data";
 import { whatsappLink } from "@/lib/whatsapp";
+import type { SiteSettings } from "@/types/settings";
 
-export function Footer() {
+export function Footer({ settings }: { settings: SiteSettings }) {
   return (
     <footer className="border-t border-cocoa/10 bg-ink text-white">
       <div className="container-shell grid gap-8 py-10 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
@@ -27,10 +27,10 @@ export function Footer() {
         <div>
           <p className="mb-3 text-sm font-semibold text-gold">Contacto</p>
           <div className="flex gap-3">
-            <Link className="grid size-10 place-items-center rounded-full bg-white/10" href={whatsappLink(siteSettings.whatsappMessage)}>
+            <Link className="grid size-10 place-items-center rounded-full bg-white/10" href={whatsappLink(settings.whatsappMessage, settings.whatsapp)}>
               <MessageCircle size={18} />
             </Link>
-            <Link className="grid size-10 place-items-center rounded-full bg-white/10" href={siteSettings.instagram} target="_blank">
+            <Link className="grid size-10 place-items-center rounded-full bg-white/10" href={settings.instagram} target="_blank">
               <Instagram size={18} />
             </Link>
           </div>

@@ -52,7 +52,7 @@ export function TeamAccessCard({
   const isCollaborator = Boolean(member.staffId);
 
   return (
-    <article className="overflow-hidden rounded-lg border border-cocoa/10 bg-white shadow-[0_18px_50px_rgba(101,0,77,0.08)]">
+    <article className="min-w-0 overflow-hidden rounded-lg border border-cocoa/10 bg-white shadow-[0_18px_50px_rgba(101,0,77,0.08)]">
       <div className="relative h-24 bg-[radial-gradient(circle_at_top_left,rgba(193,132,168,0.62),transparent_34%),linear-gradient(135deg,#65004d,#2a001f)]">
         <span
           className={cn(
@@ -62,58 +62,62 @@ export function TeamAccessCard({
         >
           {member.isActive ? "Activo" : "Inactivo"}
         </span>
-        <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-cocoa">
+        <span className="absolute right-4 top-4 max-w-[45%] truncate rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-cocoa">
           {roleLabels[member.role]}
         </span>
       </div>
 
-      <div className="px-5 pb-5">
-        <div className="-mt-10 flex items-end justify-between gap-3">
+      <div className="relative z-10 px-5 pb-5">
+        <div className="-mt-9 flex min-w-0 items-end justify-between gap-3">
           {member.avatarUrl ? (
-            <img
-              src={member.avatarUrl}
-              alt={member.fullName}
-              className="size-20 rounded-full border-4 border-white bg-cream object-cover shadow-soft"
-            />
+            <span className="relative z-10 block size-24 shrink-0 overflow-hidden rounded-full border-4 border-white bg-cream shadow-soft">
+              <img src={member.avatarUrl} alt={member.fullName} className="h-full w-full object-cover object-center" />
+            </span>
           ) : (
             <span
-              className="grid size-20 place-items-center rounded-full border-4 border-white text-xl font-black text-white shadow-soft"
+              className="relative z-10 grid size-24 shrink-0 place-items-center rounded-full border-4 border-white text-xl font-black text-white shadow-soft"
               style={{ backgroundColor: member.calendarColor || "#9b1178" }}
             >
               {initials}
             </span>
           )}
-          <span className="mb-2 flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">
-            <span className="size-3 rounded-full" style={{ backgroundColor: member.calendarColor || "#9b1178" }} />
-            Calendario
+          <span className="mb-2 flex min-w-0 items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">
+            <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: member.calendarColor || "#9b1178" }} />
+            <span className="truncate">Calendario</span>
           </span>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 min-w-0">
           <h3 className="line-clamp-1 text-xl font-black text-ink">{member.fullName}</h3>
-          <p className="mt-1 text-sm font-semibold text-cocoa">@{member.username}</p>
-          <p className="mt-2 min-h-10 text-sm leading-5 text-muted">{member.specialty || "Sin especialidad definida"}</p>
+          <p className="mt-1 truncate text-sm font-semibold text-cocoa">@{member.username}</p>
+          <p className="mt-2 min-h-10 text-sm leading-5 text-muted line-clamp-2">{member.specialty || "Sin especialidad definida"}</p>
         </div>
 
-        <div className="mt-4 grid gap-2 text-sm text-muted">
-          <span className="flex items-center gap-2">
-            <UserRound size={16} />
-            {member.phone || "Sin telefono"} · {displayContactEmail(member.email)}
+        <div className="mt-4 grid min-w-0 gap-2 text-sm text-muted">
+          <span className="flex min-w-0 items-center gap-2">
+            <UserRound size={16} className="shrink-0" />
+            <span className="truncate">
+              {member.phone || "Sin telefono"} - {displayContactEmail(member.email)}
+            </span>
           </span>
-          <span className="flex items-center gap-2">
-            <Sparkles size={16} />
-            Servicios asignados: <strong className="text-ink">{member.serviceIds.length}</strong>
+          <span className="flex min-w-0 items-center gap-2">
+            <Sparkles size={16} className="shrink-0" />
+            <span className="truncate">
+              Servicios asignados: <strong className="text-ink">{member.serviceIds.length}</strong>
+            </span>
           </span>
-          <span className="flex items-center gap-2">
-            <CalendarClock size={16} />
-            Proximas citas: <strong className="text-ink">{member.upcomingAppointments ?? 0}</strong>
+          <span className="flex min-w-0 items-center gap-2">
+            <CalendarClock size={16} className="shrink-0" />
+            <span className="truncate">
+              Proximas citas: <strong className="text-ink">{member.upcomingAppointments ?? 0}</strong>
+            </span>
           </span>
         </div>
 
         {member.serviceNames.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex min-w-0 flex-wrap gap-2">
             {member.serviceNames.slice(0, 3).map((name) => (
-              <span key={name} className="rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">
+              <span key={name} className="max-w-full truncate rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">
                 {name}
               </span>
             ))}

@@ -6,6 +6,7 @@ import { LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function AdminLoginForm() {
   return (
@@ -54,7 +55,7 @@ function LoginForm() {
         <p className="mt-2 text-sm leading-6 text-muted">Entra con tu usuario y contrasena.</p>
         <form onSubmit={login} className="mt-6 grid gap-4">
           <Input placeholder="Usuario" value={username} onChange={(event) => setUsername(event.target.value)} required />
-          <Input type="password" placeholder="Contrasena" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <PasswordInput placeholder="Contrasena" value={password} onChange={(event) => setPassword(event.target.value)} required />
           <Button type="submit">Iniciar sesion</Button>
         </form>
         {message && <p className="mt-4 rounded-lg bg-cream p-3 text-sm text-cocoa">{message}</p>}

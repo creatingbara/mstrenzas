@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, CheckCircle2, MessageCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { siteSettings } from "@/lib/data";
-import { getServiceById } from "@/lib/local-db";
+import { getServiceById, getSiteSettings } from "@/lib/local-db";
 import { formatDuration, formatPrice } from "@/lib/utils";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -12,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const service = await getServiceById(slug);
+  const [service, settings] = await Promise.all([getServiceById(slug), getSiteSettings()]);
   if (!service) notFound();
 
   const message = `Hola M&S Trenzas, quiero agendar o cotizar: ${service.name}.`;
@@ -41,7 +40,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                 Agendar
               </Button>
             </Link>
-            <Link href={whatsappLink(message, siteSettings.whatsapp)} target="_blank">
+            <Link href={whatsappLink(message, settings.whatsapp)} target="_blank">
               <Button variant="outline" className="w-full sm:w-auto">
                 <MessageCircle size={18} />
                 WhatsApp

@@ -58,6 +58,22 @@ export function ServiceAgendaGrid({
     }
   }
 
+  async function deleteServiceItem(service: Service) {
+    const confirmed = window.confirm(`Eliminar el servicio "${service.name}"? Esta accion lo quitara del panel y de las asignaciones de colaboradores.`);
+    if (!confirmed) return;
+
+    setNotice(null);
+    try {
+      const response = await fetch(`/api/admin/servicios?serviceId=${encodeURIComponent(service.id)}`, { method: "DELETE" });
+      const result = (await response.json()) as { item?: Service; error?: string; message?: string };
+      if (!response.ok || !result.item) throw new Error(result.error || "No se pudo eliminar el servicio.");
+      setServices((current) => current.filter((item) => item.id !== service.id));
+      setNotice(result.message || "Servicio eliminado.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "No se pudo eliminar el servicio.");
+    }
+  }
+
   return (
     <div className="grid gap-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -136,6 +152,7 @@ export function ServiceAgendaGrid({
             service={service}
             assignedStaffCount={(staffByService[service.id] ?? []).length}
             onToggleStatus={toggleStatus}
+            onDelete={deleteServiceItem}
           />
         ))}
       </div>

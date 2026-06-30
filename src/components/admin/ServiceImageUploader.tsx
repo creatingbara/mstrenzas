@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Upload } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,6 +13,7 @@ export function ServiceImageUploader({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +28,7 @@ export function ServiceImageUploader({
       const result = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error || "No se pudo subir la imagen.");
       onChange(result.url);
+      if (inputRef.current) inputRef.current.value = "";
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "No se pudo subir la imagen.");
     } finally {
@@ -45,23 +47,20 @@ export function ServiceImageUploader({
       </div>
       <div className="grid gap-2 md:grid-cols-[1fr_auto]">
         <Input value={value} onChange={(event) => onChange(event.target.value)} placeholder="/services/imagen.jpg" />
-        <label>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void upload(file);
-            }}
-          />
-          <Button type="button" variant="outline" disabled={busy}>
-            <span className="inline-flex items-center gap-2">
-              <Upload size={17} />
-              {busy ? "Subiendo..." : "Subir"}
-            </span>
-          </Button>
-        </label>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void upload(file);
+          }}
+        />
+        <Button type="button" variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
+          <Upload size={17} />
+          {busy ? "Subiendo..." : value ? "Cambiar foto" : "Subir foto"}
+        </Button>
       </div>
       {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
     </div>

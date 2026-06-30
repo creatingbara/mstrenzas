@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { siteSettings } from "@/lib/data";
+import type { SiteSettings } from "@/types/settings";
 
-export function HeroSection() {
+export function HeroSection({ settings }: { settings: SiteSettings }) {
   return (
     <section className="overflow-hidden">
       <div className="container-shell grid min-h-[calc(100vh-64px)] items-center gap-10 py-10 lg:grid-cols-[1.02fr_0.98fr]">
@@ -14,11 +14,11 @@ export function HeroSection() {
             Belleza protectora con acabado premium
           </div>
           <h1 className="font-display text-5xl font-bold leading-[1.02] tracking-normal text-ink md:text-7xl">
-            {siteSettings.heroTitle}
+            {settings.heroTitle}
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-muted">{siteSettings.heroSubtitle}</p>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-muted">{settings.heroSubtitle}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/agendar/catalogo-trenzas">
+            <Link href="/catalogo">
               <Button className="w-full sm:w-auto">
                 <CalendarDays size={18} />
                 Agendar cita

@@ -136,6 +136,7 @@ export const productCreateSchema = z.object({
   description: z.string().min(2, "Agrega una descripcion.").max(1000),
   price: z.number().int().min(0).max(1000000).nullable().optional(),
   stock: z.number().int().min(0).max(1000000).nullable().optional(),
+  imageUrl: z.string().min(1).max(500).optional(),
   active: z.boolean().optional()
 });
 
@@ -145,6 +146,7 @@ export const productUpdateSchema = z.object({
   description: z.string().min(2, "Agrega una descripcion.").max(1000).optional(),
   price: z.number().int().min(0).max(1000000).nullable().optional(),
   stock: z.number().int().min(0).max(1000000).nullable().optional(),
+  imageUrl: z.string().min(1).max(500).optional(),
   active: z.boolean().optional()
 });
 

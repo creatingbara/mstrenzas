@@ -1,11 +1,11 @@
 import { CalendarClock, ImageIcon, Scissors } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { galleryItems } from "@/lib/data";
-import { getServices } from "@/lib/local-db";
+import { getGalleryItems, getServices } from "@/lib/local-db";
 import type { AppointmentBooking } from "@/types/appointment";
 
 export async function DashboardStats({ appointments }: { appointments: AppointmentBooking[] }) {
   const services = await getServices();
+  const galleryItems = await getGalleryItems({ activeOnly: true });
   const stats = [
     { label: "Servicios activos", value: services.filter((service) => service.active !== false).length, icon: Scissors },
     { label: "Solicitudes pendientes", value: appointments.filter((booking) => booking.status === "pendiente").length, icon: CalendarClock },

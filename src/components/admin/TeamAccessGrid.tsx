@@ -92,7 +92,7 @@ export function TeamAccessGrid({
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div className="flex items-start gap-4">
           <span className="grid size-14 shrink-0 place-items-center rounded-lg bg-cream text-cocoa shadow-sm">
@@ -115,8 +115,8 @@ export function TeamAccessGrid({
 
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
 
-      <div className="grid gap-3 rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[1.3fr_0.8fr_0.8fr_0.9fr_1fr_auto]">
-        <label className="relative">
+      <div className="grid min-w-0 gap-3 rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[minmax(220px,1.3fr)_minmax(150px,0.8fr)_minmax(150px,0.8fr)_minmax(180px,0.9fr)_minmax(180px,1fr)_auto]">
+        <label className="relative min-w-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
           <Input
             value={query}
@@ -125,18 +125,18 @@ export function TeamAccessGrid({
             className="rounded-lg pl-10"
           />
         </label>
-        <select className="min-h-11 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={role} onChange={(event) => setRole(event.target.value)}>
+        <select className="min-h-11 min-w-0 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={role} onChange={(event) => setRole(event.target.value)}>
           <option value="all">Todos los roles</option>
           <option value="colaborador">Colaborador</option>
           <option value="admin">Admin</option>
           <option value="super_admin">Super admin</option>
         </select>
-        <select className="min-h-11 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value)}>
+        <select className="min-h-11 min-w-0 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value)}>
           <option value="all">Todos los estados</option>
           <option value="active">Activo</option>
           <option value="inactive">Inactivo</option>
         </select>
-        <select className="min-h-11 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={specialty} onChange={(event) => setSpecialty(event.target.value)}>
+        <select className="min-h-11 min-w-0 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={specialty} onChange={(event) => setSpecialty(event.target.value)}>
           <option value="all">Todas las especialidades</option>
           {specialties.map((item) => (
             <option key={item} value={item}>
@@ -144,7 +144,7 @@ export function TeamAccessGrid({
             </option>
           ))}
         </select>
-        <select className="min-h-11 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
+        <select className="min-h-11 min-w-0 rounded-lg border border-cocoa/20 bg-white px-3 text-sm" value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
           <option value="all">Todos los servicios</option>
           {services.map((service) => (
             <option key={service.id} value={service.id}>
@@ -158,7 +158,7 @@ export function TeamAccessGrid({
         </Button>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid min-w-0 gap-5 md:grid-cols-2 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">
         {filtered.map((member) => (
           <TeamAccessCard key={member.id} member={member} busy={busyId === member.id} onLifecycle={updateLifecycle} />
         ))}

@@ -4,7 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { BookingScheduler } from "@/components/booking/BookingScheduler";
 import { BookingServiceInfo } from "@/components/booking/BookingServiceInfo";
 import { Button } from "@/components/ui/button";
-import { getServiceBookingData, getServiceById } from "@/lib/local-db";
+import { getServiceBookingData, getServiceById, getSiteSettings } from "@/lib/local-db";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function ServiceBookingPage({ params }: { params: Promise<{
 
   if (!service || service.active === false) notFound();
 
-  const bookingData = await getServiceBookingData(service.id);
+  const [bookingData, settings] = await Promise.all([getServiceBookingData(service.id), getSiteSettings()]);
   const requiresWhatsApp = service.bookingEnabled === false || !bookingData.staffMembers.length;
 
   return (
@@ -29,7 +29,7 @@ export default async function ServiceBookingPage({ params }: { params: Promise<{
             <p className="mt-3 leading-7 text-muted">
               Este servicio requiere confirmación por WhatsApp antes de reservar. Escríbenos para revisar disponibilidad, precio y detalles.
             </p>
-            <Link href={whatsappLink(service.whatsappMessage || `Hola M&S Trenzas, quiero consultar por el servicio: ${service.name}.`)} target="_blank" className="mt-6 inline-block">
+            <Link href={whatsappLink(service.whatsappMessage || `Hola M&S Trenzas, quiero consultar por el servicio: ${service.name}.`, settings.whatsapp)} target="_blank" className="mt-6 inline-block">
               <Button>
                 <MessageCircle size={18} />
                 Cotizar por WhatsApp
@@ -40,6 +40,7 @@ export default async function ServiceBookingPage({ params }: { params: Promise<{
           <BookingScheduler
             service={service}
             bookingData={bookingData}
+            whatsappPhone={settings.whatsapp}
           />
         )}
       </div>

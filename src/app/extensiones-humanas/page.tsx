@@ -2,13 +2,13 @@ import Link from "next/link";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { ProductCard } from "@/components/public/ProductCard";
 import { Button } from "@/components/ui/button";
-import { getProducts } from "@/lib/local-db";
+import { getProducts, getSiteSettings } from "@/lib/local-db";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
 export default async function HumanHairPage() {
-  const products = await getProducts({ activeOnly: true });
+  const [products, settings] = await Promise.all([getProducts({ activeOnly: true }), getSiteSettings()]);
 
   return (
     <section className="section-pad">
@@ -24,7 +24,7 @@ export default async function HumanHairPage() {
           <div className="rounded-lg bg-ink p-6 text-white shadow-soft">
             <Sparkles className="text-gold" />
             <p className="mt-3 text-2xl font-semibold">Cotiza según textura, largo, color y disponibilidad.</p>
-            <Link href={whatsappLink("Hola M&S Trenzas, quiero cotizar extensiones 100% Human Hair.")} target="_blank" className="mt-5 inline-block">
+            <Link href={whatsappLink("Hola M&S Trenzas, quiero cotizar extensiones 100% Human Hair.", settings.whatsapp)} target="_blank" className="mt-5 inline-block">
               <Button variant="secondary">
                 <MessageCircle size={18} />
                 Cotizar por WhatsApp
@@ -34,7 +34,7 @@ export default async function HumanHairPage() {
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} whatsappPhone={settings.whatsapp} />
           ))}
         </div>
       </div>

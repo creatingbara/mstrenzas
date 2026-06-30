@@ -91,7 +91,7 @@ export function CollaboratorPhotoUploader({
         onDelete={avatarUrl ? remove : undefined}
         onSelectedFile={onPendingFile}
         initials={initials}
-        uploadLabel={disabled ? "Se subira al guardar" : "Subir foto"}
+        uploadLabel={disabled ? "Se guardara al guardar" : undefined}
       />
       {disabled && <p className="text-sm text-muted">Elige una foto para previsualizarla. Se subira cuando guardes el colaborador.</p>}
       {message && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{message}</p>}

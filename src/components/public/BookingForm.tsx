@@ -9,11 +9,11 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { services, siteSettings } from "@/lib/data";
+import { services } from "@/lib/data";
 import { bookingSchema, type BookingFormValues } from "@/lib/validations";
 import { bookingWhatsAppMessage, whatsappLink } from "@/lib/whatsapp";
 
-export function BookingForm() {
+export function BookingForm({ whatsappPhone }: { whatsappPhone?: string }) {
   const searchParams = useSearchParams();
   const requestedService = searchParams.get("servicio") ?? "";
   const [successLink, setSuccessLink] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function BookingForm() {
 
   async function onSubmit(values: BookingFormValues) {
     setFormNotice(null);
-    const link = whatsappLink(bookingWhatsAppMessage(values), siteSettings.whatsapp);
+    const link = whatsappLink(bookingWhatsAppMessage(values), whatsappPhone);
 
     setFormNotice("Tu mensaje está listo para WhatsApp. Para reservar con calendario, usa el botón Agendar de un servicio.");
     setSuccessLink(link);
@@ -106,4 +106,3 @@ function Field({ label, error, children }: { label: string; error?: string; chil
     </label>
   );
 }
-

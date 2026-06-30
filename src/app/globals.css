@@ -22,6 +22,11 @@ body {
   background: linear-gradient(180deg, #fff8fc 0%, #ffffff 46%, #f7eaf3 100%);
 }
 
+html.dark body {
+  color: #f8edf5;
+  background: linear-gradient(180deg, #15000f 0%, #26011d 48%, #13000f 100%);
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -46,6 +51,99 @@ a {
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 18px 50px rgba(101, 0, 77, 0.08);
   backdrop-filter: blur(14px);
+}
+
+/* ----------------------------------------------------------------------
+   Modo oscuro del sitio publico.
+   Scopeado a `.public-scope` para que el selector del cliente no dependa
+   de los estilos internos del panel administrativo.
+---------------------------------------------------------------------- */
+.dark .public-scope {
+  color: #f8edf5;
+}
+
+.dark .public-scope .text-ink {
+  color: #fff7fc !important;
+}
+
+.dark .public-scope .text-muted {
+  color: rgba(248, 237, 245, 0.72) !important;
+}
+
+.dark .public-scope .text-cocoa {
+  color: #f0a9d9 !important;
+}
+
+.dark .public-scope .bg-white,
+.dark .public-scope .bg-white\/88 {
+  background-color: #210018 !important;
+}
+
+.dark .public-scope .bg-cream,
+.dark .public-scope .bg-cream\/40,
+.dark .public-scope .bg-cream\/50,
+.dark .public-scope .bg-cream\/60,
+.dark .public-scope .bg-cream\/65 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark .public-scope .border-cocoa\/10,
+.dark .public-scope .border-cocoa\/15,
+.dark .public-scope .border-cocoa\/20,
+.dark .public-scope .border-cocoa\/25 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .public-scope .hair-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.dark .public-scope input,
+.dark .public-scope select,
+.dark .public-scope textarea {
+  color: #fff7fc;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .public-scope input::placeholder,
+.dark .public-scope textarea::placeholder {
+  color: rgba(248, 237, 245, 0.48);
+}
+
+.public-scope .booking-dropdown-panel {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  background: rgba(18, 0, 13, 0.92);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+}
+
+.public-scope .booking-dropdown-item {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.public-scope .booking-dropdown-item:hover,
+.public-scope .booking-dropdown-item:focus {
+  color: #c8a45d;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .public-scope .booking-dropdown-panel {
+  border-color: rgba(101, 0, 77, 0.18);
+  color: #171217;
+  background: rgba(255, 248, 252, 0.94);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+}
+
+.dark .public-scope .booking-dropdown-item {
+  color: rgba(23, 18, 23, 0.92);
+}
+
+.dark .public-scope .booking-dropdown-item:hover,
+.dark .public-scope .booking-dropdown-item:focus {
+  color: #65004d;
+  background: rgba(101, 0, 77, 0.1);
 }
 
 /* ----------------------------------------------------------------------

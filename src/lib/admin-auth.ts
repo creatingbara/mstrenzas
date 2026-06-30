@@ -30,7 +30,8 @@ export async function getAdminSession() {
     profileId: profile.id,
     username: profile.username,
     role: profile.role,
-    staffMemberId: staff?.id ?? null
+    staffMemberId: staff?.id ?? null,
+    avatarUrl: profile.avatarUrl || staff?.photoUrl || null
   };
 }
 

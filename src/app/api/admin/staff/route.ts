@@ -66,6 +66,7 @@ export async function POST(request: Request) {
     const email = body.email?.trim() || internalEmailForUsername(username);
     const item = await saveStaffMember({
       id: body.id,
+      profileId: currentStaff?.profileId || null,
       username,
       fullName: body.fullName,
       email,

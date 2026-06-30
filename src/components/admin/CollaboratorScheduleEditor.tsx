@@ -35,7 +35,18 @@ export function CollaboratorScheduleEditor({ staffId, businessHours }: { staffId
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-cocoa/10 bg-white">
+    <div className="rounded-lg border border-cocoa/10 bg-white">
+      <div className="grid gap-3 p-4 md:hidden">
+        {items.map((item) => (
+          <ScheduleCard
+            key={item.dayOfWeek}
+            item={item}
+            label={days[item.dayOfWeek]}
+            onChange={(patch) => setItems((current) => current.map((row) => row.dayOfWeek === item.dayOfWeek ? { ...row, ...patch } : row))}
+          />
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[820px] text-left text-sm">
         <thead className="bg-cream text-xs uppercase tracking-[0.14em] text-cocoa">
           <tr>
@@ -70,11 +81,58 @@ export function CollaboratorScheduleEditor({ staffId, businessHours }: { staffId
           ))}
         </tbody>
       </table>
+      </div>
       <div className="flex flex-col gap-3 border-t border-cocoa/10 p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">Este horario tiene prioridad sobre el horario global del negocio.</p>
         <Button type="button" onClick={save} disabled={saving}>{saving ? "Guardando..." : "Guardar horario"}</Button>
       </div>
       {notice && <p className="border-t border-cocoa/10 p-4 text-sm font-semibold text-cocoa">{notice}</p>}
     </div>
+  );
+}
+
+function ScheduleCard({
+  item,
+  label,
+  onChange
+}: {
+  item: BusinessHour;
+  label: string;
+  onChange: (patch: Partial<BusinessHour>) => void;
+}) {
+  return (
+    <article className="rounded-lg border border-cocoa/10 bg-cream/40 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-lg font-black text-ink">{label}</p>
+        <label className="flex items-center gap-2 text-sm font-semibold text-cocoa">
+          <input type="checkbox" checked={item.isActive} onChange={(event) => onChange({ isActive: event.target.checked })} />
+          Activo
+        </label>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <label className="grid gap-2 text-sm font-semibold">
+          Inicio
+          <Input type="time" value={item.startTime} onChange={(event) => onChange({ startTime: event.target.value })} />
+        </label>
+        <label className="grid gap-2 text-sm font-semibold">
+          Cierre
+          <Input type="time" value={item.endTime} onChange={(event) => onChange({ endTime: event.target.value })} />
+        </label>
+        <label className="grid gap-2 text-sm font-semibold">
+          Bloque
+          <select
+            className="min-h-11 rounded-lg border border-cocoa/20 bg-white px-3"
+            value={item.slotIntervalMinutes}
+            onChange={(event) => onChange({ slotIntervalMinutes: Number(event.target.value) })}
+          >
+            {intervals.map((interval) => <option key={interval} value={interval}>{interval} min</option>)}
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold">
+          Descanso
+          <Input type="number" value={item.bufferMinutes} onChange={(event) => onChange({ bufferMinutes: Number(event.target.value) })} />
+        </label>
+      </div>
+    </article>
   );
 }

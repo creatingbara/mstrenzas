@@ -34,6 +34,7 @@ export function AvatarUpload({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const displayUrl = previewUrl || currentUrl;
+  const actionLabel = uploading ? "Guardando..." : uploadLabel || (currentUrl ? "Guardar cambio" : "Guardar foto");
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -70,6 +71,7 @@ export function AvatarUpload({
     await onUpload(selectedFile);
     setSelectedFile(null);
     setPreviewUrl(null);
+    if (inputRef.current) inputRef.current.value = "";
     onSelectedFile?.(null);
   }
 
@@ -77,6 +79,7 @@ export function AvatarUpload({
     if (!onDelete) return;
     setSelectedFile(null);
     setPreviewUrl(null);
+    if (inputRef.current) inputRef.current.value = "";
     onSelectedFile?.(null);
     await onDelete();
   }
@@ -101,10 +104,12 @@ export function AvatarUpload({
               <ImagePlus size={16} />
               {currentUrl ? "Cambiar foto" : "Elegir foto"}
             </Button>
-            <Button type="button" disabled={disabled || uploading} onClick={uploadSelected}>
-              <Upload size={16} />
-              {uploading ? "Subiendo..." : selectedFile ? uploadLabel || "Subir foto" : "Subir/cambiar foto"}
-            </Button>
+            {selectedFile && (
+              <Button type="button" disabled={disabled || uploading} onClick={uploadSelected}>
+                <Upload size={16} />
+                {actionLabel}
+              </Button>
+            )}
             {currentUrl && onDelete && (
               <Button type="button" variant="ghost" disabled={disabled || uploading} onClick={deleteCurrent}>
                 <Trash2 size={16} />
@@ -121,7 +126,7 @@ export function AvatarUpload({
         className="hidden"
         onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
       />
-      {selectedFile && <p className="text-sm font-semibold text-cocoa">Preview listo: {selectedFile.name}</p>}
+      {selectedFile && <p className="text-sm font-semibold text-cocoa">Foto lista para guardar: {selectedFile.name}</p>}
       {message && <p className="rounded-lg bg-white p-3 text-sm font-semibold text-cocoa">{message}</p>}
     </div>
   );

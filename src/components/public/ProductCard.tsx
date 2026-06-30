@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/utils";
 import { whatsappLink } from "@/lib/whatsapp";
 import type { Product } from "@/types/product";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, whatsappPhone }: { product: Product; whatsappPhone: string }) {
   return (
     <Card className="overflow-hidden p-0">
       <div className="relative aspect-[4/3] bg-cream">
@@ -17,7 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
         <h3 className="font-display text-2xl font-bold">{product.name}</h3>
         <p className="mt-2 text-sm leading-6 text-muted">{product.description}</p>
         <p className="mt-4 text-sm font-bold text-cocoa">{formatPrice(product.price, !product.price)}</p>
-        <Link href={whatsappLink(`Hola M&S Trenzas, quiero cotizar: ${product.name}`)} target="_blank" className="mt-5 block">
+        <Link href={whatsappLink(`Hola M&S Trenzas, quiero cotizar: ${product.name}`, whatsappPhone)} target="_blank" className="mt-5 block">
           <Button className="w-full">
             <MessageCircle size={18} />
             Cotizar por WhatsApp

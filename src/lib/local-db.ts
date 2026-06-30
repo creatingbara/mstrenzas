@@ -3,13 +3,14 @@ import { defaultAgendaPages } from "@/lib/agenda-page-defaults";
 import { fallbackAppointmentData, normalizeTime } from "@/lib/appointments";
 import { defaultBookingMenuItems } from "@/lib/booking-menu-defaults";
 import { generateAvailableSlots, getAppointmentEndTime } from "@/lib/booking/availability";
-import { products as seedProducts, services, siteSettings } from "@/lib/data";
+import { galleryItems as seedGalleryItems, products as seedProducts, services, siteSettings } from "@/lib/data";
 import { execute, query, queryOne, withTransaction } from "@/lib/db/pg";
 import { internalEmailForUsername, isInternalUsernameEmail, normalizeUsername, usernameFromName, validateUsername } from "@/lib/utils/username";
 import type { AppointmentBookingFormValues } from "@/lib/validations";
 import type { AppointmentBooking, AppointmentStatus, AvailabilityException, BusinessHour } from "@/types/appointment";
 import type { AgendaPageContent } from "@/types/agenda-page";
 import type { BookingMenuItem } from "@/types/booking-menu";
+import type { GalleryItem } from "@/types/gallery";
 import type { Product } from "@/types/product";
 import type { Service } from "@/types/service";
 import type { SiteSettings } from "@/types/settings";
@@ -91,6 +92,19 @@ type ProfileRow = {
   updated_at: string;
 };
 
+type GalleryItemRow = {
+  id: string;
+  title: string | null;
+  category: string;
+  image_url: string | null;
+  instagram_url: string | null;
+  featured: number;
+  is_active: number;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 // --------------------------------------------------------------------------
 // Seeding idempotente: la primera vez que se usa la base de datos contra un
 // Supabase vacío se cargan los datos por defecto (colaboradoras, horarios,
@@ -118,6 +132,7 @@ async function seedDatabase() {
   await seedSiteSettings();
   await seedBookingMenu();
   await seedAgendaPages();
+  await seedGalleryDefaults();
   await seedProductDefaults();
 }
 
@@ -151,9 +166,11 @@ async function seedBusinessHours() {
 
 async function seedAdminProfile() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@ms-trenzas.local";
-  const adminUsername = normalizeUsername(process.env.ADMIN_USERNAME || adminEmail.split("@")[0] || "admin");
   const existing = await queryOne<{ id: string }>("select id from profiles where email = $1", [adminEmail]);
   if (existing) return;
+
+  const preferredUsername = normalizeUsername(process.env.ADMIN_USERNAME || adminEmail.split("@")[0] || "admin");
+  const adminUsername = await makeUniqueUsername(preferredUsername);
 
   await execute(
     `insert into profiles (id, username, full_name, email, phone, role, avatar_url, is_active)
@@ -303,15 +320,27 @@ async function ensureSiteSettingsTable() {
 }
 
 async function seedBookingMenu() {
-  if ((await countRows("booking_menu_items")) > 0) return;
-
   await withTransaction(async (client) => {
     for (const item of defaultBookingMenuItems) {
       await client.query(
-        "insert into booking_menu_items (id, label, href, description, is_active, sort_order) values ($1, $2, $3, $4, $5, $6) on conflict (id) do nothing",
+        `insert into booking_menu_items (id, label, href, description, is_active, sort_order, updated_at)
+         values ($1, $2, $3, $4, $5, $6, now()::text)
+         on conflict (id) do update set
+           label = excluded.label,
+           href = excluded.href,
+           description = excluded.description,
+           is_active = excluded.is_active,
+           sort_order = excluded.sort_order,
+           updated_at = now()::text`,
         [item.id, item.label, item.href, item.description ?? null, item.active ? 1 : 0, item.sortOrder]
       );
     }
+
+    await client.query(
+      `update booking_menu_items
+          set is_active = 0, updated_at = now()::text
+        where id in ('agendar-dama', 'agendar-caballero', 'catalogo-trenzas')`
+    );
   });
 }
 
@@ -348,6 +377,51 @@ async function seedProductDefaults() {
       await client.query(
         "insert into products (id, name, description, price, stock, image_url, active, sort_order) values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (id) do nothing",
         [product.id, product.name, product.description, product.price ?? null, product.stock ?? null, product.imageUrl, product.active ? 1 : 0, index]
+      );
+      index += 1;
+    }
+  });
+}
+
+async function ensureGalleryItemsTable() {
+  await execute(
+    `create table if not exists gallery_items (
+      id text primary key,
+      title text,
+      category text not null default '',
+      image_url text,
+      instagram_url text,
+      featured integer not null default 0,
+      is_active integer not null default 1,
+      sort_order integer not null default 0,
+      created_at text not null default now()::text,
+      updated_at text not null default now()::text
+    )`
+  );
+
+  await execute("alter table gallery_items add column if not exists title text");
+  await execute("alter table gallery_items add column if not exists category text not null default ''");
+  await execute("alter table gallery_items add column if not exists image_url text");
+  await execute("alter table gallery_items add column if not exists instagram_url text");
+  await execute("alter table gallery_items add column if not exists featured integer not null default 0");
+  await execute("alter table gallery_items add column if not exists is_active integer not null default 1");
+  await execute("alter table gallery_items add column if not exists sort_order integer not null default 0");
+  await execute("alter table gallery_items add column if not exists created_at text not null default now()::text");
+  await execute("alter table gallery_items add column if not exists updated_at text not null default now()::text");
+}
+
+async function seedGalleryDefaults() {
+  await ensureGalleryItemsTable();
+  if ((await countRows("gallery_items")) > 0) return;
+
+  await withTransaction(async (client) => {
+    let index = 0;
+    for (const item of seedGalleryItems) {
+      await client.query(
+        `insert into gallery_items (id, title, category, image_url, instagram_url, featured, is_active, sort_order)
+         values ($1, $2, $3, $4, $5, $6, 1, $7)
+         on conflict (id) do nothing`,
+        [item.id, item.title ?? null, item.category, item.imageUrl ?? null, item.instagramUrl ?? null, item.featured ? 1 : 0, item.sortOrder ?? index]
       );
       index += 1;
     }
@@ -918,16 +992,20 @@ export async function saveStaffMember(input: {
   await ready();
   await ensureStaffAvatarColumns();
   const id = input.id || randomUUID();
+  const existingStaff = input.id
+    ? await queryOne<Pick<StaffMemberRow, "profile_id">>("select profile_id from staff_members where id = $1", [input.id])
+    : null;
+  const profileIdForUsernameCheck = input.profileId ?? existingStaff?.profile_id ?? null;
   const username = normalizeUsername(input.username);
   const usernameError = validateUsername(username);
   if (usernameError) throw new Error(usernameError);
-  if (await isUsernameTaken(username, id, input.profileId || undefined)) {
+  if (await isUsernameTaken(username, id, profileIdForUsernameCheck || undefined)) {
     throw new Error("Este usuario ya está en uso.");
   }
 
   const email = input.email?.trim() || internalEmailForUsername(username);
   const profileId = await upsertProfileForStaff({
-    id: input.profileId,
+    id: profileIdForUsernameCheck,
     username,
     fullName: input.fullName,
     email,
@@ -1293,6 +1371,135 @@ export async function saveBookingMenuItems(items: BookingMenuItem[]): Promise<Bo
 }
 
 // --------------------------------------------------------------------------
+// Galeria
+// --------------------------------------------------------------------------
+
+function mapGalleryItem(row: GalleryItemRow): GalleryItem {
+  const imageUrl = row.image_url && !isInstagramUrl(row.image_url) ? row.image_url : undefined;
+  const instagramUrl = row.instagram_url || (row.image_url && isInstagramUrl(row.image_url) ? row.image_url : null);
+
+  return {
+    id: row.id,
+    title: row.title ?? undefined,
+    category: row.category,
+    imageUrl,
+    instagramUrl,
+    featured: Boolean(row.featured),
+    active: Boolean(row.is_active),
+    sortOrder: row.sort_order
+  };
+}
+
+export async function getGalleryItems({
+  activeOnly = false,
+  featuredOnly = false
+}: {
+  activeOnly?: boolean;
+  featuredOnly?: boolean;
+} = {}): Promise<GalleryItem[]> {
+  await ready();
+
+  const filters: string[] = [];
+  if (activeOnly) filters.push("is_active = 1");
+  if (featuredOnly) filters.push("featured = 1");
+
+  const rows = await query<GalleryItemRow>(
+    `select * from gallery_items${filters.length ? ` where ${filters.join(" and ")}` : ""} order by sort_order, created_at`
+  );
+  return rows.map(mapGalleryItem);
+}
+
+export async function saveGalleryItem(input: GalleryItem): Promise<GalleryItem> {
+  await ready();
+  await ensureGalleryItemsTable();
+
+  const id = input.id || randomUUID();
+  const title = input.title?.trim() || null;
+  const category = input.category.trim() || "Instagram";
+  let imageUrl = input.imageUrl?.trim() || null;
+  let instagramUrl = input.instagramUrl?.trim() || null;
+
+  if (imageUrl && isInstagramUrl(imageUrl)) {
+    instagramUrl = instagramUrl || imageUrl;
+    imageUrl = null;
+  }
+
+  if (!imageUrl && !instagramUrl) {
+    throw new Error("Agrega una imagen manual o una URL de Instagram.");
+  }
+
+  if (instagramUrl && !isInstagramUrl(instagramUrl)) {
+    throw new Error("La URL de Instagram debe ser un enlace valido de instagram.com.");
+  }
+
+  if (imageUrl && !isAllowedGalleryImageUrl(imageUrl)) {
+    throw new Error("La imagen debe ser una ruta local, Supabase Storage o images.unsplash.com.");
+  }
+
+  const row = await queryOne<GalleryItemRow>(
+    `insert into gallery_items (id, title, category, image_url, instagram_url, featured, is_active, sort_order, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, now()::text)
+     on conflict (id) do update set
+       title = excluded.title,
+       category = excluded.category,
+       image_url = excluded.image_url,
+       instagram_url = excluded.instagram_url,
+       featured = excluded.featured,
+       is_active = excluded.is_active,
+       sort_order = excluded.sort_order,
+       updated_at = now()::text
+     returning *`,
+    [
+      id,
+      title,
+      category,
+      imageUrl,
+      instagramUrl,
+      input.featured ? 1 : 0,
+      input.active === false ? 0 : 1,
+      input.sortOrder ?? 0
+    ]
+  );
+
+  if (!row) throw new Error("No se pudo guardar la publicacion de galeria.");
+  return mapGalleryItem(row);
+}
+
+export async function hideGalleryItem(id: string) {
+  await ready();
+  const row = await queryOne<GalleryItemRow>(
+    "update gallery_items set is_active = 0, updated_at = now()::text where id = $1 returning *",
+    [id]
+  );
+  return row ? mapGalleryItem(row) : null;
+}
+
+export async function deleteGalleryItem(id: string) {
+  await ready();
+  const row = await queryOne<GalleryItemRow>("delete from gallery_items where id = $1 returning *", [id]);
+  return row ? mapGalleryItem(row) : null;
+}
+
+function isInstagramUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return ["instagram.com", "www.instagram.com"].includes(url.hostname.toLowerCase()) && url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedGalleryImageUrl(value: string) {
+  if (value.startsWith("/")) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && (url.hostname.endsWith(".supabase.co") || url.hostname === "images.unsplash.com");
+  } catch {
+    return false;
+  }
+}
+
+// --------------------------------------------------------------------------
 // Páginas de agendar
 // --------------------------------------------------------------------------
 
@@ -1430,12 +1637,17 @@ type ServiceOverrideRow = {
   recommendations_json: string | null;
   includes_json: string | null;
   excludes_json: string | null;
+  is_deleted?: number;
 };
 
 type CustomServiceRow = Omit<ServiceOverrideRow, "service_id"> & {
   id: string;
   slug: string;
 };
+
+async function ensureServiceDeletionColumns() {
+  await execute("alter table if exists service_overrides add column if not exists is_deleted integer not null default 0");
+}
 
 export type ServiceOverridePatch = {
   slug?: string;
@@ -1586,18 +1798,23 @@ function parseJsonList(value: string | null, fallback: string[]) {
 
 export async function getServices(): Promise<Service[]> {
   await ready();
+  await ensureServiceDeletionColumns();
   const rows = await query<ServiceOverrideRow>("select * from service_overrides");
   const overrides = new Map(rows.map((row) => [row.service_id, row]));
-  const baseServices = services.map((base) => mergeServiceWithOverride(base, overrides.get(base.id)));
+  const baseServices = services
+    .filter((base) => overrides.get(base.id)?.is_deleted !== 1)
+    .map((base) => mergeServiceWithOverride(base, overrides.get(base.id)));
   const customRows = await query<CustomServiceRow>("select * from custom_services");
   return [...baseServices, ...customRows.map(mapCustomService)].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 }
 
 export async function getServiceById(serviceId: string): Promise<Service | null> {
   await ready();
+  await ensureServiceDeletionColumns();
   const base = services.find((item) => item.id === serviceId || item.slug === serviceId);
   if (base) {
     const override = await queryOne<ServiceOverrideRow>("select * from service_overrides where service_id = $1", [base.id]);
+    if (override?.is_deleted === 1) return null;
     return mergeServiceWithOverride(base, override);
   }
 
@@ -1606,6 +1823,7 @@ export async function getServiceById(serviceId: string): Promise<Service | null>
 }
 
 export async function updateServiceOverride(serviceId: string, patch: ServiceOverridePatch): Promise<Service | null> {
+  await ensureServiceDeletionColumns();
   const current = await getServiceById(serviceId);
   if (!current) return null;
 
@@ -1740,6 +1958,7 @@ export async function updateServiceOverride(serviceId: string, patch: ServiceOve
         recommendations_json = excluded.recommendations_json,
         includes_json = excluded.includes_json,
         excludes_json = excluded.excludes_json,
+        is_deleted = 0,
         updated_at = now()::text
       returning *`,
     [
@@ -1780,6 +1999,29 @@ export async function updateServiceOverride(serviceId: string, patch: ServiceOve
 
   const base = services.find((item) => item.id === current.id);
   return base ? mergeServiceWithOverride(base, row as ServiceOverrideRow) : next;
+}
+
+export async function deleteService(serviceId: string) {
+  await ready();
+  await ensureServiceDeletionColumns();
+  const current = await getServiceById(serviceId);
+  if (!current) return null;
+
+  await execute("delete from staff_services where service_id = $1", [current.id]);
+
+  if (current.source === "custom") {
+    const row = await queryOne<CustomServiceRow>("delete from custom_services where id = $1 returning *", [current.id]);
+    return row ? mapCustomService(row) : current;
+  }
+
+  await updateServiceOverride(current.id, {
+    active: false,
+    bookingEnabled: false,
+    showOnHome: false,
+    featured: false
+  });
+  await execute("update service_overrides set is_deleted = 1, updated_at = now()::text where service_id = $1", [current.id]);
+  return current;
 }
 
 export async function createCustomService(input: ServiceOverridePatch): Promise<Service> {
@@ -1965,21 +2207,22 @@ export async function createProduct(input: {
 
 export async function updateProduct(
   id: string,
-  patch: { name?: string; description?: string; price?: number | null; stock?: number | null; active?: boolean }
+  patch: { name?: string; description?: string; price?: number | null; stock?: number | null; imageUrl?: string | null; active?: boolean }
 ): Promise<Product | null> {
   const current = await getProductById(id);
   if (!current) return null;
 
   const row = await queryOne<ProductRow>(
     `update products
-       set name = $1, description = $2, price = $3, stock = $4, active = $5, updated_at = now()::text
-     where id = $6
+       set name = $1, description = $2, price = $3, stock = $4, image_url = $5, active = $6, updated_at = now()::text
+     where id = $7
      returning *`,
     [
       patch.name?.trim() || current.name,
       patch.description?.trim() ?? current.description,
       patch.price === undefined ? current.price ?? null : patch.price,
       patch.stock === undefined ? current.stock ?? null : patch.stock,
+      patch.imageUrl?.trim() || current.imageUrl,
       (patch.active ?? current.active) ? 1 : 0,
       id
     ]

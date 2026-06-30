@@ -23,10 +23,12 @@ type StaffSlot = {
 
 export function BookingScheduler({
   service,
-  bookingData
+  bookingData,
+  whatsappPhone
 }: {
   service: Service;
   bookingData: ServiceBookingData;
+  whatsappPhone: string;
 }) {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -172,6 +174,7 @@ export function BookingScheduler({
           staffName={selectedSlot.staffName}
           selectedDate={selectedDate}
           selectedTime={selectedSlot.time}
+          whatsappPhone={whatsappPhone}
           onBooked={(appointment) => {
             setBookedAppointments((current) => ({
               ...current,

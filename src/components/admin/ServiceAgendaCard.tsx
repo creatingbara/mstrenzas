@@ -2,20 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, Clock, Edit3, MoreHorizontal, Users } from "lucide-react";
+import { CalendarDays, Clock, Edit3, Eye, EyeOff, MoreHorizontal, Trash2, Users } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatDuration, formatPrice } from "@/lib/utils";
+import { cn, formatDuration, formatPrice } from "@/lib/utils";
 import type { Service } from "@/types/service";
 
 export function ServiceAgendaCard({
   service,
   assignedStaffCount,
-  onToggleStatus
+  onToggleStatus,
+  onDelete
 }: {
   service: Service;
   assignedStaffCount: number;
   onToggleStatus: (service: Service) => void;
+  onDelete: (service: Service) => void;
 }) {
+  const [open, setOpen] = useState(false);
   const price = service.priceLabel || formatPrice(service.priceFrom, service.requiresQuote);
   const duration = service.durationLabel || formatDuration(service.durationMinutes);
 
@@ -71,18 +75,68 @@ export function ServiceAgendaCard({
           <Link href={`/admin/calendario?service=${service.slug}`}>
             <Button variant="outline" className="w-full rounded-lg">Ver agenda</Button>
           </Link>
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-lg px-0"
-            aria-label={service.active === false ? "Activar servicio" : "Desactivar servicio"}
-            title={service.active === false ? "Activar servicio" : "Desactivar servicio"}
-            onClick={() => onToggleStatus(service)}
-          >
-            <MoreHorizontal size={18} />
-          </Button>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-lg px-0"
+              aria-label="Abrir acciones del servicio"
+              aria-expanded={open}
+              aria-haspopup="menu"
+              onClick={() => setOpen((current) => !current)}
+            >
+              <MoreHorizontal size={18} />
+            </Button>
+            {open && (
+              <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-20 w-56 rounded-lg border border-cocoa/10 bg-white p-2 shadow-[0_18px_50px_rgba(45,0,32,0.18)]">
+                <ActionButton
+                  icon={service.active === false ? Eye : EyeOff}
+                  label={service.active === false ? "Activar servicio" : "Desactivar servicio"}
+                  onClick={() => {
+                    setOpen(false);
+                    onToggleStatus(service);
+                  }}
+                />
+                <ActionButton
+                  icon={Trash2}
+                  label="Eliminar servicio"
+                  danger
+                  onClick={() => {
+                    setOpen(false);
+                    onDelete(service);
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </article>
+  );
+}
+
+function ActionButton({
+  icon: Icon,
+  label,
+  danger,
+  onClick
+}: {
+  icon: typeof MoreHorizontal;
+  label: string;
+  danger?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-ink transition hover:bg-cream",
+        danger && "text-red-700 hover:bg-red-50"
+      )}
+      onClick={onClick}
+    >
+      <Icon size={17} />
+      {label}
+    </button>
   );
 }

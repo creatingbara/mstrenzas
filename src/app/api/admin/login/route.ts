@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
     profileId: profile?.id || "local-admin",
     username: normalizedUsername,
     role,
-    staffMemberId: staff?.id || null
+    staffMemberId: staff?.id || null,
+    avatarUrl: profile?.avatar_url || staff?.photoUrl || null
   });
   const response = NextResponse.json({
     ok: true,

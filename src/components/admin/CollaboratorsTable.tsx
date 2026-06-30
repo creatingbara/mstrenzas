@@ -43,7 +43,60 @@ export function CollaboratorsTable({ staffMembers }: { staffMembers: StaffMember
 
   return (
     <div className="grid gap-3">
-      <div className="overflow-x-auto rounded-lg border border-cocoa/10 bg-white">
+      <div className="grid gap-3 md:hidden">
+        {staffMembers.map((staff) => (
+          <article key={staff.id} className="rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              {staff.photoUrl ? (
+                <img src={staff.photoUrl} alt={staff.fullName} className="size-12 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span
+                  className="grid size-12 shrink-0 place-items-center rounded-full text-xs font-bold text-white"
+                  style={{ backgroundColor: staff.calendarColor || "#65004d" }}
+                >
+                  {staff.fullName.slice(0, 2).toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-lg font-black text-ink">{staff.fullName}</p>
+                <p className="text-sm font-semibold text-cocoa">@{staff.username}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-muted">{staff.specialty || "Sin especialidad"}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+              <Info label="Estado" value={staff.isActive ? "Activo" : "Inactivo"} />
+              <Info label="Servicios" value={String(staff.services.length)} />
+              <Info label="Citas" value={String(staff.appointmentCount ?? 0)} />
+              <Info label="Proximas" value={String(staff.upcomingAppointments ?? 0)} />
+            </div>
+            <div className="mt-3 grid gap-1 text-sm text-muted">
+              <p>{staff.phone}</p>
+              <p className="truncate">{displayContactEmail(staff.email)}</p>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <Link href={`/admin/colaboradores/${staff.id}`} className={buttonStyles({ variant: "outline" })}>
+                Editar
+              </Link>
+              <Link href={`/admin/colaboradores/${staff.id}/horario`} className={buttonStyles({ variant: "ghost" })}>
+                Horario
+              </Link>
+              <Link href={`/admin/colaboradores/${staff.id}/servicios`} className={buttonStyles({ variant: "ghost" })}>
+                Servicios
+              </Link>
+              <Button type="button" variant="ghost" disabled={busyId === staff.id} onClick={() => updateStaff(staff, staff.isActive ? "deactivate" : "activate")}>
+                {staff.isActive ? "Desactivar" : "Activar"}
+              </Button>
+              {(staff.appointmentCount ?? 0) === 0 && (
+                <Button type="button" variant="outline" disabled={busyId === staff.id} onClick={() => updateStaff(staff, "delete")}>
+                  Eliminar definitivamente
+                </Button>
+              )}
+            </div>
+          </article>
+        ))}
+        {!staffMembers.length && <p className="rounded-lg bg-white p-4 text-sm text-muted shadow-sm">No hay colaboradores registrados.</p>}
+      </div>
+      <div className="hidden overflow-x-auto rounded-lg border border-cocoa/10 bg-white md:block">
         <table className="w-full min-w-[1120px] text-left text-sm">
           <thead className="bg-cream text-xs uppercase tracking-[0.14em] text-cocoa">
             <tr>
@@ -150,5 +203,14 @@ export function CollaboratorsTable({ staffMembers }: { staffMembers: StaffMember
       </div>
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
     </div>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="rounded-lg bg-cream/60 px-3 py-2">
+      <span className="block text-xs font-bold uppercase tracking-[0.12em] text-cocoa">{label}</span>
+      <span className="mt-1 block truncate font-semibold text-ink">{value}</span>
+    </span>
   );
 }
