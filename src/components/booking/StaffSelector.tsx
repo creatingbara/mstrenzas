@@ -60,9 +60,10 @@ export function StaffSelector({
       {!selectedStaffId && (
         <Button
           type="button"
-          className="mx-auto min-h-11 w-full max-w-sm px-5 py-2.5 text-center text-sm sm:w-auto"
+          className="mx-auto w-full max-w-md"
           onClick={() => onSelect("any")}
         >
+          <Shuffle size={18} />
           Continuar con cualquier colaboradora disponible
         </Button>
       )}

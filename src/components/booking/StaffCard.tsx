@@ -1,5 +1,6 @@
 "use client";
 
+import { UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { StaffMember } from "@/types/staff";
@@ -21,13 +22,11 @@ export function StaffCard({
     .toUpperCase();
 
   return (
-    <button
-      type="button"
+    <div
       className={cn(
         "grid gap-4 rounded-lg border bg-white p-5 text-left shadow-soft transition hover:border-cocoa/40",
         selected ? "border-ink ring-2 ring-ink/10" : "border-cocoa/10"
       )}
-      onClick={onSelect}
     >
       <div className="flex items-start gap-4">
         {staff.photoUrl ? (
@@ -46,9 +45,10 @@ export function StaffCard({
           {staff.bio && <p className="mt-2 text-sm leading-6 text-muted">{staff.bio}</p>}
         </div>
       </div>
-      <Button type="button" variant={selected ? "primary" : "outline"} className="w-full">
+      <Button type="button" className="w-full" onClick={onSelect}>
+        <UserCheck size={18} />
         {selected ? "Seleccionada" : "Elegir"}
       </Button>
-    </button>
+    </div>
   );
 }
