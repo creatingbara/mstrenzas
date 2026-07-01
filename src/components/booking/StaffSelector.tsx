@@ -1,7 +1,6 @@
 "use client";
 
 import { Shuffle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { StaffCard } from "@/components/booking/StaffCard";
 import { cn } from "@/lib/utils";
 import type { StaffMember } from "@/types/staff";
@@ -39,7 +38,7 @@ export function StaffSelector({
           onClick={() => onSelect("any")}
         >
           <span>
-            <span className="block font-bold">Cualquier colaborador disponible</span>
+            <span className="block font-bold">Continuar con cualquier colaboradora disponible</span>
             <span className={cn("text-sm", selectedStaffId === "any" ? "text-white/70" : "text-muted")}>
               Te mostraremos los horarios libres de todas las colaboradoras.
             </span>
@@ -57,16 +56,6 @@ export function StaffSelector({
           />
         ))}
       </div>
-      {!selectedStaffId && (
-        <Button
-          type="button"
-          className="mx-auto w-full max-w-md"
-          onClick={() => onSelect("any")}
-        >
-          <Shuffle size={18} />
-          Continuar con cualquier colaboradora disponible
-        </Button>
-      )}
     </section>
   );
 }

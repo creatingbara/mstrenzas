@@ -45,7 +45,7 @@ export function StaffCard({
           {staff.bio && <p className="mt-2 text-sm leading-6 text-muted">{staff.bio}</p>}
         </div>
       </div>
-      <Button type="button" className="w-full" onClick={onSelect}>
+      <Button type="button" className="h-11 max-h-11 min-h-11 w-full px-5 py-0 text-sm leading-none" onClick={onSelect}>
         <UserCheck size={18} />
         {selected ? "Seleccionada" : "Elegir"}
       </Button>
