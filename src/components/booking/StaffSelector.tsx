@@ -58,7 +58,11 @@ export function StaffSelector({
         ))}
       </div>
       {!selectedStaffId && (
-        <Button type="button" onClick={() => onSelect("any")}>
+        <Button
+          type="button"
+          className="mx-auto min-h-11 w-full max-w-sm px-5 py-2.5 text-center text-sm sm:w-auto"
+          onClick={() => onSelect("any")}
+        >
           Continuar con cualquier colaboradora disponible
         </Button>
       )}
