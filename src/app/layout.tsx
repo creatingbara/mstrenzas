@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { PublicChrome } from "@/components/public/PublicChrome";
 import { getSiteSettings } from "@/lib/local-db";
@@ -35,7 +37,17 @@ export const viewport: Viewport = {
 
 export const dynamic = "force-dynamic";
 
+const ADMIN_HOST = "admin.mystrenzas.com";
+
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const headerStore = await headers();
+  const hostname = headerStore.get("host")?.split(":")[0]?.toLowerCase();
+  const pathname = headerStore.get("x-ms-pathname");
+
+  if (hostname === ADMIN_HOST && pathname && !pathname.startsWith("/admin")) {
+    redirect("/admin/dashboard");
+  }
+
   const [settings, theme, navigation, footer] = await Promise.all([
     getSiteSettings(),
     getAppThemeSettings(),
