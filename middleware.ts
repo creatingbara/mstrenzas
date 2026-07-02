@@ -17,7 +17,8 @@ function isStaticOrApiPath(pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  const { hostname, pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl;
+  const hostname = request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? request.nextUrl.hostname;
 
   if (PUBLIC_HOSTS.has(hostname) && pathname.startsWith("/admin")) {
     const redirectUrl = request.nextUrl.clone();
