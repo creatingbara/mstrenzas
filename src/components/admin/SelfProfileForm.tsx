@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CollaboratorPhotoUploader } from "@/components/admin/CollaboratorPhotoUploader";
 import { PasskeySecurityPanel } from "@/components/admin/PasskeySecurityPanel";
 import { ProfilePhotoUploader } from "@/components/admin/ProfilePhotoUploader";
+import { PushNotificationsPanel } from "@/components/admin/PushNotificationsPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -138,6 +139,7 @@ export function SelfProfileForm({
       </section>
 
       <PasskeySecurityPanel />
+      <PushNotificationsPanel />
 
       <Button type="submit" className="rounded-lg" disabled={saving}>
         {saving ? "Guardando..." : "Guardar perfil"}

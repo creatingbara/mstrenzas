@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import type { ReactNode } from "react";
 import { PublicChrome } from "@/components/public/PublicChrome";
 import { getSiteSettings } from "@/lib/local-db";
+import { getAppFooterSettings, getAppNavigationItems, getAppThemeSettings, themeCssVariables } from "@/lib/super-panel";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -35,7 +36,12 @@ export const viewport: Viewport = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const settings = await getSiteSettings();
+  const [settings, theme, navigation, footer] = await Promise.all([
+    getSiteSettings(),
+    getAppThemeSettings(),
+    getAppNavigationItems({ activeOnly: true }),
+    getAppFooterSettings()
+  ]);
 
   return (
     <html
@@ -43,9 +49,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${inter.variable} ${playfair.variable}`}
+      style={themeCssVariables(theme)}
     >
+      <head>{theme.faviconUrl && <link rel="icon" href={theme.faviconUrl} />}</head>
       <body className="font-sans">
-        <PublicChrome settings={settings}>{children}</PublicChrome>
+        <PublicChrome settings={settings} theme={theme} navigation={navigation} footer={footer}>{children}</PublicChrome>
       </body>
     </html>
   );

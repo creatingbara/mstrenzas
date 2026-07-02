@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PushNotificationsPanel } from "@/components/admin/PushNotificationsPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +43,8 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
   }
 
   return (
-    <div className="rounded-lg border border-cocoa/10 bg-white p-5">
+    <div className="grid gap-5">
+      <div className="rounded-lg border border-cocoa/10 bg-white p-5">
       <h2 className="font-display text-2xl font-bold">Configuración general</h2>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <Input value={form.whatsapp} onChange={(event) => update("whatsapp", event.target.value)} placeholder="Numero de WhatsApp" />
@@ -84,6 +86,8 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           </p>
         )}
       </div>
+      </div>
+      <PushNotificationsPanel />
     </div>
   );
 }

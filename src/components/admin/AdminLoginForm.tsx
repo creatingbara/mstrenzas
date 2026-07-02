@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Fingerprint, LockKeyhole } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,43 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
+  const [checkingPasskey, setCheckingPasskey] = useState(false);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername || !window.PublicKeyCredential) {
+      setPasskeyAvailable(false);
+      setCheckingPasskey(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setCheckingPasskey(true);
+      try {
+        const response = await fetch("/api/passkeys/login/available", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: trimmedUsername }),
+          signal: controller.signal
+        });
+        const result = (await response.json()) as { available?: boolean };
+        setPasskeyAvailable(Boolean(response.ok && result.available));
+      } catch (error) {
+        if (!controller.signal.aborted) setPasskeyAvailable(false);
+      } finally {
+        if (!controller.signal.aborted) setCheckingPasskey(false);
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [username]);
 
   async function login(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -99,10 +134,12 @@ function LoginForm() {
           <PasswordInput placeholder="Contrasena" value={password} onChange={(event) => setPassword(event.target.value)} required />
           <Button type="submit">Iniciar sesion</Button>
         </form>
-        <Button type="button" variant="outline" className="mt-3 w-full" disabled={passkeyBusy} onClick={loginWithPasskey}>
-          <Fingerprint size={17} />
-          {passkeyBusy ? "Verificando..." : "Entrar con Face ID / Touch ID"}
-        </Button>
+        {passkeyAvailable && (
+          <Button type="button" variant="outline" className="mt-3 w-full" disabled={passkeyBusy || checkingPasskey} onClick={loginWithPasskey}>
+            <Fingerprint size={17} />
+            {passkeyBusy ? "Verificando..." : "Entrar con Face ID / Touch ID"}
+          </Button>
+        )}
         {message && <p className="mt-4 rounded-lg bg-cream p-3 text-sm text-cocoa">{message}</p>}
       </Card>
     </div>

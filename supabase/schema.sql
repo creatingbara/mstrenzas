@@ -114,6 +114,23 @@ create table if not exists public.user_passkeys (
   foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
+-- PUSH WEB (suscripciones por dispositivo; no almacena datos del cliente)
+create table if not exists public.push_subscriptions (
+  id text primary key,
+  user_id text not null,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  user_agent text,
+  device_name text,
+  created_at text not null default now()::text,
+  last_used_at text,
+  foreign key (user_id) references public.profiles(id) on delete cascade
+);
+
+create index if not exists idx_push_subscriptions_user_id
+  on public.push_subscriptions (user_id);
+
 -- SERVICIOS QUE OFRECE CADA COLABORADOR
 create table if not exists public.staff_services (
   staff_id text not null,
@@ -311,11 +328,173 @@ create unique index if not exists idx_staff_members_username_unique
 
 -- STORAGE: buckets públicos para imágenes (servicios, galería, productos,
 -- referencias de citas y fotos de colaboradores).
+-- SUPER PANEL / EDITOR GLOBAL
+create table if not exists public.app_theme_settings (
+  id text primary key,
+  logo_url text,
+  logo_dark_url text,
+  favicon_url text,
+  primary_color text,
+  secondary_color text,
+  accent_color text,
+  background_color text,
+  text_color text,
+  dark_primary_color text,
+  dark_background_color text,
+  dark_text_color text,
+  font_heading text,
+  font_body text,
+  border_radius text,
+  button_style text,
+  card_style text,
+  updated_at text not null default now()::text
+);
+
+create table if not exists public.app_navigation_items (
+  id text primary key,
+  label text not null,
+  href text not null default '#',
+  parent_id text,
+  sort_order integer not null default 0,
+  is_active integer not null default 1,
+  opens_new_tab integer not null default 0,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+create table if not exists public.app_page_sections (
+  id text primary key,
+  page_key text not null,
+  section_key text not null,
+  title text,
+  subtitle text,
+  content text,
+  image_url text,
+  button_label text,
+  button_url text,
+  sort_order integer not null default 0,
+  is_active integer not null default 1,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text,
+  unique(page_key, section_key)
+);
+
+create table if not exists public.app_seo_settings (
+  id text primary key,
+  page_key text not null unique,
+  title text,
+  description text,
+  keywords text,
+  og_image_url text,
+  created_at text not null default now()::text,
+  updated_at text not null default now()::text
+);
+
+create table if not exists public.app_footer_settings (
+  id text primary key,
+  business_name text,
+  description text,
+  whatsapp text,
+  instagram_url text,
+  address text,
+  schedule text,
+  copyright_text text,
+  updated_at text not null default now()::text
+);
+
+create table if not exists public.app_admin_ui_settings (
+  id text primary key,
+  admin_title text,
+  admin_subtitle text,
+  sidebar_logo_url text,
+  sidebar_color text,
+  sidebar_accent_color text,
+  updated_at text not null default now()::text
+);
+
+alter table public.app_theme_settings enable row level security;
+alter table public.app_navigation_items enable row level security;
+alter table public.app_page_sections enable row level security;
+alter table public.app_seo_settings enable row level security;
+alter table public.app_footer_settings enable row level security;
+alter table public.app_admin_ui_settings enable row level security;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_theme_settings' and policyname = 'app_theme_settings_public_read') then
+    create policy app_theme_settings_public_read on public.app_theme_settings for select to anon, authenticated using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_navigation_items' and policyname = 'app_navigation_items_public_read') then
+    create policy app_navigation_items_public_read on public.app_navigation_items for select to anon, authenticated using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_page_sections' and policyname = 'app_page_sections_public_read') then
+    create policy app_page_sections_public_read on public.app_page_sections for select to anon, authenticated using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_seo_settings' and policyname = 'app_seo_settings_public_read') then
+    create policy app_seo_settings_public_read on public.app_seo_settings for select to anon, authenticated using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_footer_settings' and policyname = 'app_footer_settings_public_read') then
+    create policy app_footer_settings_public_read on public.app_footer_settings for select to anon, authenticated using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_admin_ui_settings' and policyname = 'app_admin_ui_settings_public_read') then
+    create policy app_admin_ui_settings_public_read on public.app_admin_ui_settings for select to anon, authenticated using (true);
+  end if;
+end $$;
+
+create or replace function public.ms_current_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.role
+    from public.profiles p
+   where p.id = auth.uid()::text
+      or lower(p.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+   limit 1
+$$;
+
+do $$
+declare
+  table_name text;
+  policy_name text;
+begin
+  foreach table_name in array array[
+    'app_theme_settings',
+    'app_navigation_items',
+    'app_page_sections',
+    'app_seo_settings',
+    'app_footer_settings',
+    'app_admin_ui_settings'
+  ]
+  loop
+    policy_name := table_name || '_super_admin_write';
+    if not exists (
+      select 1
+        from pg_policies
+       where schemaname = 'public'
+         and tablename = table_name
+         and policyname = policy_name
+    ) then
+      execute format(
+        'create policy %I on public.%I for all to authenticated using (public.ms_current_role() = %L) with check (public.ms_current_role() = %L)',
+        policy_name,
+        table_name,
+        'super_admin',
+        'super_admin'
+      );
+    end if;
+  end loop;
+end $$;
+
 insert into storage.buckets (id, name, public)
 values
   ('services', 'services', true),
   ('gallery', 'gallery', true),
   ('products', 'products', true),
   ('booking-references', 'booking-references', true),
-  ('staff-avatars', 'staff-avatars', true)
+  ('staff-avatars', 'staff-avatars', true),
+  ('brand-assets', 'brand-assets', true)
 on conflict (id) do update set public = excluded.public;

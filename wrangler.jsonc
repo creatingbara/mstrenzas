@@ -8,6 +8,16 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "routes": [
+    {
+      "pattern": "mystrenzas.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "admin.mystrenzas.com",
+      "custom_domain": true
+    }
+  ],
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",

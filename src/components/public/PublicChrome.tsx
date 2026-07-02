@@ -7,8 +7,21 @@ import { Header } from "@/components/public/Header";
 import { PWARegister } from "@/components/public/PWARegister";
 import { WhatsAppFloatingButton } from "@/components/public/WhatsAppFloatingButton";
 import type { SiteSettings } from "@/types/settings";
+import type { AppFooterSettings, AppNavigationItem, AppThemeSettings } from "@/types/super-panel";
 
-export function PublicChrome({ children, settings }: { children: ReactNode; settings: SiteSettings }) {
+export function PublicChrome({
+  children,
+  settings,
+  theme,
+  navigation,
+  footer
+}: {
+  children: ReactNode;
+  settings: SiteSettings;
+  theme: AppThemeSettings;
+  navigation: AppNavigationItem[];
+  footer: AppFooterSettings;
+}) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
 
@@ -23,10 +36,10 @@ export function PublicChrome({ children, settings }: { children: ReactNode; sett
 
   return (
     <div className="public-scope min-h-screen">
-      <Header />
+      <Header theme={theme} navigation={navigation} />
       <main>{children}</main>
-      <Footer settings={settings} />
-      <WhatsAppFloatingButton settings={settings} />
+      <Footer settings={settings} footer={footer} navigation={navigation} />
+      <WhatsAppFloatingButton settings={settings} footer={footer} />
       <PWARegister />
     </div>
   );

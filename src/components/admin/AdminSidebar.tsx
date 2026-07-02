@@ -8,12 +8,14 @@ import {
   Gauge,
   ImageIcon,
   Package,
+  SlidersHorizontal,
   Settings,
   Users
 } from "lucide-react";
 import type { AdminSession } from "@/lib/auth/admin-session";
 import { cn } from "@/lib/utils";
 import type { StaffRole } from "@/types/staff";
+import type { AppAdminUiSettings } from "@/types/super-panel";
 
 type AdminNavLink = {
   href: string;
@@ -36,6 +38,7 @@ const superAdminGroups: AdminNavGroup[] = [
       { href: "/admin/equipo", label: "Equipo y Accesos", icon: Users },
       { href: "/admin/galeria", label: "Galeria", icon: ImageIcon },
       { href: "/admin/productos", label: "Productos", icon: Package },
+      { href: "/admin/super-panel", label: "Super Panel", icon: SlidersHorizontal },
       { href: "/admin/configuracion", label: "Configuracion", icon: Settings }
     ]
   }
@@ -68,23 +71,30 @@ function isActivePath(pathname: string, href: string) {
 
 export function AdminSidebar({
   session,
-  onNavigate
+  onNavigate,
+  adminUi
 }: {
   session: AdminSession;
   onNavigate?: () => void;
+  adminUi: AppAdminUiSettings;
 }) {
   const pathname = usePathname();
   const visibleGroups = getGroupsForRole(session.role);
 
   return (
-    <aside className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top_left,rgba(193,132,168,0.42),transparent_28%),linear-gradient(180deg,#320024_0%,#1b0019_100%)] p-4 text-white">
+    <aside
+      className="flex min-h-screen flex-col p-4 text-white"
+      style={{
+        background: `radial-gradient(circle at top left, color-mix(in srgb, ${adminUi.sidebarAccentColor} 38%, transparent), transparent 28%), linear-gradient(180deg, ${adminUi.sidebarColor} 0%, #1b0019 100%)`
+      }}
+    >
       <Link href="/admin/dashboard" className="flex items-center gap-3 rounded-lg px-2 py-4" onClick={onNavigate}>
         <span className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-gold/50 bg-nude shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
-          <img src="/brand/logo-ms-trenzas.jpg" alt="M&S Trenzas" className="h-full w-full object-cover" />
+          <img src={adminUi.sidebarLogoUrl || "/brand/logo-ms-trenzas.jpg"} alt="M&S Trenzas" className="h-full w-full object-cover" />
         </span>
         <span className="min-w-0">
           <span className="block text-xl font-extrabold text-white">M&S Trenzas</span>
-          <span className="block text-sm text-white/85">Panel Administrativo</span>
+          <span className="block text-sm text-white/85">{adminUi.adminSubtitle}</span>
         </span>
       </Link>
 
@@ -104,8 +114,9 @@ export function AdminSidebar({
                   onClick={onNavigate}
                   className={cn(
                     "flex min-h-14 items-center gap-4 rounded-lg px-4 py-3 text-base font-semibold text-white/90 transition hover:bg-white/12 hover:text-white",
-                    active && "bg-[#9b1178] text-white shadow-[0_14px_34px_rgba(155,17,120,0.28)] hover:bg-[#9b1178]"
+                    active && "text-white shadow-[0_14px_34px_rgba(155,17,120,0.28)]"
                   )}
+                  style={active ? { backgroundColor: adminUi.sidebarAccentColor } : undefined}
                 >
                   <link.icon size={18} />
                   {link.label}

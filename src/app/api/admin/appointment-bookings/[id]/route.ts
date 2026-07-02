@@ -4,6 +4,7 @@ import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { canViewAppointment } from "@/lib/auth/require-auth";
 import { hasPermission } from "@/lib/auth/permissions";
 import { deleteAppointmentBooking, getAdminAppointmentById, updateAppointmentStatus } from "@/lib/local-db";
+import { notifyAppointmentConfirmed } from "@/lib/push-notifications";
 import type { AppointmentStatus } from "@/types/appointment";
 
 export const runtime = "nodejs";
@@ -39,6 +40,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const item = await updateAppointmentStatus(id, body.status);
     if (!item) {
       return NextResponse.json({ error: "Cita no encontrada." }, { status: 404 });
+    }
+
+    if (body.status === "confirmada" && current.status !== "confirmada") {
+      await notifyAppointmentConfirmed(item).catch((error) => {
+        console.error("No se pudo notificar la confirmacion de cita", error);
+      });
     }
 
     return NextResponse.json({ item });

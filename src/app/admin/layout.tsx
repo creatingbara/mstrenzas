@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminSession } from "@/lib/admin-auth";
 import { canAccessAdminPath } from "@/lib/auth/permissions";
+import { getAppAdminUiSettings } from "@/lib/super-panel";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const headerStore = await headers();
@@ -39,5 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect(`${profilePath}?password=required`);
   }
 
-  return <AdminShell session={session}>{children}</AdminShell>;
+  const adminUi = await getAppAdminUiSettings();
+
+  return <AdminShell session={session} adminUi={adminUi}>{children}</AdminShell>;
 }

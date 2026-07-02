@@ -33,3 +33,48 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+
+self.addEventListener("push", (event) => {
+  const payload = readPushPayload(event);
+  const title = payload.title || "M&S Trenzas";
+  const url = payload.url || "/admin";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body || "Tienes una nueva notificacion.",
+      icon: "/icons/icon.svg",
+      badge: "/icons/icon.svg",
+      tag: payload.tag || "ms-trenzas",
+      data: { url },
+      actions: [
+        {
+          action: "open",
+          title: "Abrir"
+        }
+      ]
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = new URL(event.notification.data?.url || "/admin", self.location.origin).href;
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        const existingClient = clients.find((client) => client.url === targetUrl);
+        if (existingClient) return existingClient.focus();
+        return self.clients.openWindow(targetUrl);
+      })
+  );
+});
+
+function readPushPayload(event) {
+  try {
+    return event.data ? event.data.json() : {};
+  } catch {
+    return {};
+  }
+}

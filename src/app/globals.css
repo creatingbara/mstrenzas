@@ -3,8 +3,21 @@
 @tailwind utilities;
 
 :root {
-  color: #171217;
-  background: #fff8fc;
+  --app-primary-color: #65004d;
+  --app-secondary-color: #c8a45d;
+  --app-accent-color: #9b1178;
+  --app-background-color: #fff8fc;
+  --app-text-color: #171217;
+  --app-dark-primary-color: #f0a9d9;
+  --app-dark-background-color: #15000f;
+  --app-dark-text-color: #f8edf5;
+  --app-font-heading: var(--font-playfair), "Playfair Display", serif;
+  --app-font-body: var(--font-inter), Inter, sans-serif;
+  --app-border-radius: 8px;
+  --app-button-radius: 999px;
+  --app-card-shadow: 0 18px 50px color-mix(in srgb, var(--app-primary-color) 10%, transparent);
+  color: var(--app-text-color);
+  background: var(--app-background-color);
 }
 
 * {
@@ -18,13 +31,13 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  color: #171217;
-  background: linear-gradient(180deg, #fff8fc 0%, #ffffff 46%, #f7eaf3 100%);
+  color: var(--app-text-color);
+  background: linear-gradient(180deg, var(--app-background-color) 0%, #ffffff 46%, #f7eaf3 100%);
 }
 
 html.dark body {
-  color: #f8edf5;
-  background: linear-gradient(180deg, #15000f 0%, #26011d 48%, #13000f 100%);
+  color: var(--app-dark-text-color);
+  background: linear-gradient(180deg, var(--app-dark-background-color) 0%, #26011d 48%, #13000f 100%);
 }
 
 a {
@@ -34,7 +47,7 @@ a {
 
 ::selection {
   color: #ffffff;
-  background: #65004d;
+  background: var(--app-primary-color);
 }
 
 .container-shell {
@@ -47,10 +60,49 @@ a {
 }
 
 .hair-card {
-  border: 1px solid rgba(101, 0, 77, 0.14);
+  border: 1px solid color-mix(in srgb, var(--app-primary-color) 16%, transparent);
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 18px 50px rgba(101, 0, 77, 0.08);
+  box-shadow: var(--app-card-shadow);
   backdrop-filter: blur(14px);
+}
+
+.public-scope {
+  font-family: var(--app-font-body);
+}
+
+.public-scope .font-display {
+  font-family: var(--app-font-heading);
+}
+
+.public-scope .rounded-lg,
+.public-scope .hair-card {
+  border-radius: var(--app-border-radius);
+}
+
+.public-scope button.rounded-full,
+.public-scope a.rounded-full,
+.public-scope label.rounded-full {
+  border-radius: var(--app-button-radius);
+}
+
+.public-scope .bg-cocoa {
+  background-color: var(--app-primary-color) !important;
+}
+
+.public-scope .hover\:bg-plum:hover {
+  background-color: var(--app-accent-color) !important;
+}
+
+.public-scope .text-cocoa {
+  color: var(--app-primary-color) !important;
+}
+
+.public-scope .text-gold {
+  color: var(--app-secondary-color) !important;
+}
+
+.public-scope .bg-gold {
+  background-color: var(--app-secondary-color) !important;
 }
 
 /* ----------------------------------------------------------------------

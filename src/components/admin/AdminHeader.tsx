@@ -5,6 +5,7 @@ import { Bell, CalendarClock, CheckCircle2, ChevronDown, LogOut, Menu, Monitor, 
 import { useEffect, useState } from "react";
 import type { AdminSession } from "@/lib/auth/admin-session";
 import { cn } from "@/lib/utils";
+import type { AppAdminUiSettings } from "@/types/super-panel";
 
 const roleLabels: Record<AdminSession["role"], string> = {
   super_admin: "Super admin",
@@ -29,10 +30,12 @@ function applyAdminTheme(mode: ThemeMode) {
 
 export function AdminHeader({
   session,
-  menuControlId
+  menuControlId,
+  adminUi
 }: {
   session: AdminSession;
   menuControlId: string;
+  adminUi: AppAdminUiSettings;
 }) {
   const [theme, setTheme] = useState<ThemeMode>("system");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
@@ -86,8 +89,8 @@ export function AdminHeader({
             <Menu size={19} />
           </label>
           <div className="min-w-0">
-            <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-cocoa dark:text-pink-300 sm:block">Panel administrativo</p>
-            <h1 className="truncate text-lg font-black text-ink dark:text-white sm:text-xl">Gestion de M&S Trenzas</h1>
+            <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-cocoa dark:text-pink-300 sm:block">{adminUi.adminSubtitle}</p>
+            <h1 className="truncate text-lg font-black text-ink dark:text-white sm:text-xl">{adminUi.adminTitle}</h1>
           </div>
         </div>
 

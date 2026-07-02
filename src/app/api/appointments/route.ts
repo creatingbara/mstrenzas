@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAppointmentBooking } from "@/lib/local-db";
+import { notifyNewAppointment } from "@/lib/push-notifications";
 import { appointmentBookingSchema } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -40,6 +41,10 @@ export async function POST(request: Request) {
       appointmentDate: body.appointmentDate,
       selectedTime: body.selectedTime,
       values: parsed.data
+    });
+
+    await notifyNewAppointment(item).catch((error) => {
+      console.error("No se pudo notificar la nueva reservacion", error);
     });
 
     return NextResponse.json({ item }, { status: 201 });
