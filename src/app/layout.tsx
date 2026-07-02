@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { DomainRedirector } from "@/components/DomainRedirector";
 import { PublicChrome } from "@/components/public/PublicChrome";
 import { getSiteSettings } from "@/lib/local-db";
 import { getAppFooterSettings, getAppNavigationItems, getAppThemeSettings, themeCssVariables } from "@/lib/super-panel";
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     >
       <head>{theme.faviconUrl && <link rel="icon" href={theme.faviconUrl} />}</head>
       <body className="font-sans">
+        <DomainRedirector />
         <PublicChrome settings={settings} theme={theme} navigation={navigation} footer={footer}>{children}</PublicChrome>
       </body>
     </html>
