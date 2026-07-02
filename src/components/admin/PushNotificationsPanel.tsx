@@ -17,6 +17,7 @@ type Notice = {
 export function PushNotificationsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [info, setInfo] = useState<PushInfo | null>(null);
   const [notice, setNotice] = useState<Notice>({ type: "muted", message: "Comprobando notificaciones..." });
@@ -132,6 +133,26 @@ export function PushNotificationsPanel() {
     }
   }
 
+  async function sendTest() {
+    setTesting(true);
+    setNotice({ type: "muted", message: "Enviando notificacion de prueba..." });
+
+    try {
+      const response = await fetch("/api/push/test", { method: "POST" });
+      const result = (await response.json()) as { error?: string; message?: string; sent?: number; total?: number };
+      if (!response.ok) throw new Error(result.error || "No se pudo enviar la prueba.");
+
+      setNotice({
+        type: result.sent ? "ok" : "error",
+        message: result.message || `Prueba enviada a ${result.sent ?? 0} de ${result.total ?? 0} dispositivos.`
+      });
+    } catch (error) {
+      setNotice({ type: "error", message: error instanceof Error ? error.message : "No se pudo enviar la prueba." });
+    } finally {
+      setTesting(false);
+    }
+  }
+
   const blocked = notice.message.includes("bloqueadas");
   const disabled = loading || saving || blocked || !info?.configured;
 
@@ -151,6 +172,12 @@ export function PushNotificationsPanel() {
           <Button type="button" variant="outline" className="rounded-lg" disabled={saving} onClick={deactivate}>
             <BellOff size={18} />
             Desactivar
+          </Button>
+        )}
+        {enabled && (
+          <Button type="button" variant="outline" className="rounded-lg" disabled={saving || testing} onClick={sendTest}>
+            <Bell size={18} />
+            {testing ? "Enviando..." : "Enviar prueba"}
           </Button>
         )}
       </div>

@@ -30,6 +30,15 @@ type PushPayload = {
   tag?: string;
 };
 
+export type PushDeliveryResult = {
+  subscriptionId: string;
+  endpointType: "apple" | "fcm" | "other";
+  deviceName: string | null;
+  ok: boolean;
+  statusCode?: number;
+  error?: string;
+};
+
 let schemaPromise: Promise<void> | null = null;
 let vapidConfigured = false;
 
@@ -131,6 +140,17 @@ async function getAdminPushSubscriptions() {
   );
 }
 
+export async function getUserPushSubscriptions(userId: string) {
+  await ensurePushSubscriptionsTable();
+  return query<PushSubscriptionRow>(
+    `select *
+       from push_subscriptions
+      where user_id = $1
+      order by last_used_at desc nulls last, created_at desc`,
+    [userId]
+  );
+}
+
 async function getStaffPushSubscriptions(staffMemberId: string | null | undefined) {
   if (!staffMemberId) return [];
   await ensurePushSubscriptionsTable();
@@ -179,10 +199,16 @@ export async function notifyAppointmentConfirmed(appointment: AppointmentBooking
 }
 
 export async function sendPushNotification(subscriptions: PushSubscriptionRow[], payload: PushPayload) {
-  if (!subscriptions.length || !configureVapid()) return;
+  if (!subscriptions.length || !configureVapid()) return [];
 
-  await Promise.allSettled(
+  const results = await Promise.all(
     subscriptions.map(async (subscription) => {
+      const resultBase = {
+        subscriptionId: subscription.id,
+        endpointType: getEndpointType(subscription.endpoint),
+        deviceName: subscription.device_name
+      } satisfies Omit<PushDeliveryResult, "ok" | "statusCode" | "error">;
+
       try {
         await webpush.sendNotification(
           {
@@ -196,14 +222,25 @@ export async function sendPushNotification(subscriptions: PushSubscriptionRow[],
           { TTL: 60 * 60 }
         );
         await execute("update push_subscriptions set last_used_at = now()::text where id = $1", [subscription.id]);
+        return { ...resultBase, ok: true };
       } catch (error) {
         const statusCode = typeof error === "object" && error && "statusCode" in error ? Number(error.statusCode) : 0;
+        const message = error instanceof Error ? error.message : "No se pudo enviar la notificacion.";
         if (statusCode === 404 || statusCode === 410) {
           await deletePushSubscriptionByEndpoint(subscription.endpoint);
         } else {
           console.error("No se pudo enviar una notificacion push", error);
         }
+        return { ...resultBase, ok: false, statusCode, error: message };
       }
     })
   );
+
+  return results;
+}
+
+function getEndpointType(endpoint: string): PushDeliveryResult["endpointType"] {
+  if (endpoint.startsWith("https://web.push.apple.com")) return "apple";
+  if (endpoint.includes("fcm.googleapis.com")) return "fcm";
+  return "other";
 }
