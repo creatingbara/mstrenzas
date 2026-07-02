@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import webpush from "web-push";
+import type { RequestDetails } from "web-push";
 import { execute, query, queryOne } from "@/lib/db/pg";
 import type { AppointmentBooking } from "@/types/appointment";
 
@@ -237,7 +238,7 @@ export async function sendPushNotification(subscriptions: PushSubscriptionRow[],
       } satisfies Omit<PushDeliveryResult, "ok" | "statusCode" | "error">;
 
       try {
-        await webpush.sendNotification(
+        await sendNotificationWithFetch(
           {
             endpoint: subscription.endpoint,
             keys: {
@@ -270,6 +271,36 @@ function getEndpointType(endpoint: string): PushDeliveryResult["endpointType"] {
   if (endpoint.startsWith("https://web.push.apple.com")) return "apple";
   if (endpoint.includes("fcm.googleapis.com")) return "fcm";
   return "other";
+}
+
+async function sendNotificationWithFetch(
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+  payload: string,
+  options: { TTL: number }
+) {
+  const requestDetails = webpush.generateRequestDetails(subscription, payload, options) as RequestDetails;
+  const response = await fetch(requestDetails.endpoint, {
+    method: requestDetails.method,
+    headers: requestDetails.headers,
+    body: requestDetails.body ? new Uint8Array(requestDetails.body) : undefined
+  });
+
+  const body = await response.text().catch(() => "");
+  if (!response.ok) {
+    const error = new Error(`Push service respondio ${response.status}`) as Error & {
+      statusCode?: number;
+      body?: string;
+    };
+    error.statusCode = response.status;
+    error.body = body;
+    throw error;
+  }
+
+  return {
+    statusCode: response.status,
+    body,
+    headers: Object.fromEntries(response.headers.entries())
+  };
 }
 
 async function logPushNotification(eventType: string, appointmentId: string | null, recipientCount: number, deliveries: PushDeliveryResult[]) {
