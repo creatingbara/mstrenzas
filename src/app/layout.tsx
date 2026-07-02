@@ -39,9 +39,18 @@ export const dynamic = "force-dynamic";
 
 const ADMIN_HOST = "admin.mystrenzas.com";
 
+function getHostname(headerStore: Headers) {
+  const forwardedHost = headerStore.get("x-forwarded-host");
+  const originalHost = headerStore.get("x-original-host");
+  const host = headerStore.get("host");
+  const forwarded = headerStore.get("forwarded")?.match(/host=([^;]+)/i)?.[1];
+  const candidate = forwardedHost ?? originalHost ?? forwarded ?? host;
+  return candidate?.split(",")[0]?.split(":")[0]?.trim().toLowerCase();
+}
+
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const headerStore = await headers();
-  const hostname = headerStore.get("host")?.split(":")[0]?.toLowerCase();
+  const hostname = getHostname(headerStore);
   const pathname = headerStore.get("x-ms-pathname");
 
   if (hostname === ADMIN_HOST && pathname && !pathname.startsWith("/admin")) {

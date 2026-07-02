@@ -8,10 +8,19 @@ import { getAppAdminUiSettings } from "@/lib/super-panel";
 const ADMIN_HOST = "admin.mystrenzas.com";
 const PUBLIC_HOSTS = new Set(["mystrenzas.com", "www.mystrenzas.com"]);
 
+function getHostname(headerStore: Headers) {
+  const forwardedHost = headerStore.get("x-forwarded-host");
+  const originalHost = headerStore.get("x-original-host");
+  const host = headerStore.get("host");
+  const forwarded = headerStore.get("forwarded")?.match(/host=([^;]+)/i)?.[1];
+  const candidate = forwardedHost ?? originalHost ?? forwarded ?? host;
+  return candidate?.split(",")[0]?.split(":")[0]?.trim().toLowerCase();
+}
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const headerStore = await headers();
   const pathname = headerStore.get("x-ms-pathname");
-  const hostname = headerStore.get("host")?.split(":")[0]?.toLowerCase();
+  const hostname = getHostname(headerStore);
 
   if (hostname && PUBLIC_HOSTS.has(hostname) && pathname?.startsWith("/admin")) {
     redirect(`https://${ADMIN_HOST}${pathname}`);

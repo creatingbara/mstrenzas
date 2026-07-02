@@ -5,6 +5,15 @@ import { updateSession } from "@/lib/supabase/middleware";
 const PUBLIC_HOSTS = new Set(["mystrenzas.com", "www.mystrenzas.com"]);
 const ADMIN_HOST = "admin.mystrenzas.com";
 
+function getRequestHostname(request: NextRequest) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const originalHost = request.headers.get("x-original-host");
+  const host = request.headers.get("host");
+  const forwarded = request.headers.get("forwarded")?.match(/host=([^;]+)/i)?.[1];
+  const candidate = forwardedHost ?? originalHost ?? forwarded ?? host ?? request.nextUrl.hostname;
+  return candidate.split(",")[0]?.split(":")[0]?.trim().toLowerCase();
+}
+
 function isStaticOrApiPath(pathname: string) {
   return (
     pathname.startsWith("/_next") ||
@@ -18,7 +27,7 @@ function isStaticOrApiPath(pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hostname = request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? request.nextUrl.hostname;
+  const hostname = getRequestHostname(request);
 
   if (PUBLIC_HOSTS.has(hostname) && pathname.startsWith("/admin")) {
     const redirectUrl = request.nextUrl.clone();
