@@ -131,6 +131,21 @@ create table if not exists public.push_subscriptions (
 create index if not exists idx_push_subscriptions_user_id
   on public.push_subscriptions (user_id);
 
+-- LOGS DE ENTREGA PUSH (diagnostico operacional, no contiene datos biometricos)
+create table if not exists public.push_notification_logs (
+  id text primary key,
+  event_type text not null,
+  appointment_id text,
+  recipient_count integer not null default 0,
+  success_count integer not null default 0,
+  failure_count integer not null default 0,
+  deliveries_json text not null default '[]',
+  created_at text not null default now()::text
+);
+
+create index if not exists idx_push_notification_logs_appointment
+  on public.push_notification_logs (appointment_id, created_at);
+
 -- SERVICIOS QUE OFRECE CADA COLABORADOR
 create table if not exists public.staff_services (
   staff_id text not null,

@@ -40,6 +40,7 @@ export type PushDeliveryResult = {
 };
 
 let schemaPromise: Promise<void> | null = null;
+let logSchemaPromise: Promise<void> | null = null;
 let vapidConfigured = false;
 
 export function getVapidPublicKey() {
@@ -81,6 +82,26 @@ export function ensurePushSubscriptionsTable() {
   })();
 
   return schemaPromise;
+}
+
+export function ensurePushNotificationLogsTable() {
+  logSchemaPromise ??= (async () => {
+    await execute(`
+      create table if not exists push_notification_logs (
+        id text primary key,
+        event_type text not null,
+        appointment_id text,
+        recipient_count integer not null default 0,
+        success_count integer not null default 0,
+        failure_count integer not null default 0,
+        deliveries_json text not null default '[]',
+        created_at text not null default (now()::text)
+      )
+    `);
+    await execute("create index if not exists idx_push_notification_logs_appointment on push_notification_logs(appointment_id, created_at)");
+  })();
+
+  return logSchemaPromise;
 }
 
 export async function upsertPushSubscription({
@@ -171,12 +192,15 @@ export async function notifyNewAppointment(appointment: AppointmentBooking) {
   const staffSubscriptions = await getStaffPushSubscriptions(appointment.staffMemberId);
   const subscriptions = uniqueSubscriptions([...adminSubscriptions, ...staffSubscriptions]);
 
-  return sendPushNotification(subscriptions, {
+  const deliveries = await sendPushNotification(subscriptions, {
     title: "Nueva reservacion",
     body: `${appointment.clientName} reservo ${appointment.serviceName} para ${appointment.appointmentDate} a las ${appointment.startTime}.`,
     url: `/admin/citas/${appointment.id}`,
     tag: `appointment-new-${appointment.id}`
   });
+
+  await logPushNotification("appointment_created", appointment.id, subscriptions.length, deliveries);
+  return deliveries;
 }
 
 function uniqueSubscriptions(subscriptions: PushSubscriptionRow[]) {
@@ -190,12 +214,15 @@ function uniqueSubscriptions(subscriptions: PushSubscriptionRow[]) {
 
 export async function notifyAppointmentConfirmed(appointment: AppointmentBooking) {
   const subscriptions = await getStaffPushSubscriptions(appointment.staffMemberId);
-  return sendPushNotification(subscriptions, {
+  const deliveries = await sendPushNotification(subscriptions, {
     title: "Cita confirmada",
     body: `${appointment.clientName} fue confirmada para ${appointment.serviceName} el ${appointment.appointmentDate} a las ${appointment.startTime}.`,
     url: `/admin/citas/${appointment.id}`,
     tag: `appointment-confirmed-${appointment.id}`
   });
+
+  await logPushNotification("appointment_confirmed", appointment.id, subscriptions.length, deliveries);
+  return deliveries;
 }
 
 export async function sendPushNotification(subscriptions: PushSubscriptionRow[], payload: PushPayload) {
@@ -243,4 +270,18 @@ function getEndpointType(endpoint: string): PushDeliveryResult["endpointType"] {
   if (endpoint.startsWith("https://web.push.apple.com")) return "apple";
   if (endpoint.includes("fcm.googleapis.com")) return "fcm";
   return "other";
+}
+
+async function logPushNotification(eventType: string, appointmentId: string | null, recipientCount: number, deliveries: PushDeliveryResult[]) {
+  await ensurePushNotificationLogsTable();
+  const successCount = deliveries.filter((delivery) => delivery.ok).length;
+  const failureCount = deliveries.length - successCount;
+
+  await execute(
+    `insert into push_notification_logs (
+       id, event_type, appointment_id, recipient_count, success_count, failure_count, deliveries_json, created_at
+     )
+     values ($1, $2, $3, $4, $5, $6, $7, now()::text)`,
+    [randomUUID(), eventType, appointmentId, recipientCount, successCount, failureCount, JSON.stringify(deliveries)]
+  );
 }
