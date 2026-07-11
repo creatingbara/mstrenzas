@@ -80,6 +80,7 @@ export function ensurePushSubscriptionsTable() {
       )
     `);
     await execute("create index if not exists idx_push_subscriptions_user_id on push_subscriptions(user_id)");
+    await execute("alter table push_subscriptions enable row level security");
   })();
 
   return schemaPromise;
@@ -100,6 +101,7 @@ export function ensurePushNotificationLogsTable() {
       )
     `);
     await execute("create index if not exists idx_push_notification_logs_appointment on push_notification_logs(appointment_id, created_at)");
+    await execute("alter table push_notification_logs enable row level security");
   })();
 
   return logSchemaPromise;

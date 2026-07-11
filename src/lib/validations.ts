@@ -26,7 +26,12 @@ export const appointmentBookingSchema = z.object({
   instagram: z.string().optional(),
   email: z.string().email("Escribe un correo valido.").optional().or(z.literal("")),
   referenceImageUrl: httpsUrl,
-  note: z.string().max(700, "La nota es muy larga.").optional(),
+  note: z
+    .string()
+    .trim()
+    .min(10, "Cuéntanos al menos el color, largo o estilo que deseas.")
+    .max(700, "La nota es muy larga."),
+  depositPolicyAccepted: z.boolean().refine((value) => value, "Debes aceptar la politica de anticipo."),
   website: z.string().max(0, "Solicitud no valida.").optional()
 });
 

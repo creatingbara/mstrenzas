@@ -13,14 +13,18 @@ export async function DashboardStats({ appointments }: { appointments: Appointme
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {stats.map((stat) => (
-        <Card key={stat.label} className="rounded-lg border-cocoa/10 bg-white shadow-[0_18px_50px_rgba(101,0,77,0.08)]">
-          <span className="grid size-12 place-items-center rounded-lg bg-cream text-cocoa">
-            <stat.icon size={24} />
-          </span>
-          <p className="mt-5 text-4xl font-black text-ink">{stat.value}</p>
-          <p className="mt-1 text-sm font-semibold text-muted">{stat.label}</p>
+        <Card key={stat.label} className="min-w-0 rounded-[1.15rem] border-cocoa/10 bg-white p-4 shadow-[0_18px_50px_rgba(101,0,77,0.08)] lg:rounded-lg lg:p-6">
+          <div className="flex min-w-0 items-center gap-3 lg:block">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-cream text-cocoa lg:size-12 lg:rounded-lg">
+              <stat.icon size={22} />
+            </span>
+            <span className="min-w-0">
+              <p className="text-3xl font-black leading-none text-ink lg:mt-5 lg:text-4xl">{stat.value}</p>
+              <p className="mt-1 truncate text-sm font-semibold text-muted">{stat.label}</p>
+            </span>
+          </div>
         </Card>
       ))}
     </div>

@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { getUserPasskeys } from "@/lib/auth/passkeys";
 import { getProfileAuthByUsername, getStaffMemberByProfileId } from "@/lib/local-db";
+import { requireAdminOrigin } from "@/lib/security/origin-guard";
 import { normalizeUsername } from "@/lib/utils/username";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const originError = requireAdminOrigin(request);
+  if (originError) return originError;
+
   const { username } = (await request.json().catch(() => ({}))) as { username?: string };
   const normalizedUsername = normalizeUsername(username || "");
 

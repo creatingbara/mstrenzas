@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/auth/admin-session";
 import { isStrongPassword } from "@/lib/auth/password-policy";
 import { getProfileAuthByUsername, getStaffMemberByProfileId, setProfilePasswordChangeRequired, verifyLocalProfilePassword } from "@/lib/local-db";
+import { requireAdminOrigin } from "@/lib/security/origin-guard";
 import { normalizeUsername } from "@/lib/utils/username";
 
 export const runtime = "nodejs";
@@ -16,6 +17,9 @@ const MAX_LOGIN_ATTEMPTS = 8;
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
 export async function POST(request: NextRequest) {
+  const originError = requireAdminOrigin(request);
+  if (originError) return originError;
+
   const { username, password } = (await request.json()) as { username?: string; password?: string };
   const normalizedUsername = normalizeUsername(username || "");
   const attemptKey = `${getClientKey(request)}:${normalizedUsername}`;
@@ -47,6 +51,7 @@ export async function POST(request: NextRequest) {
   const authenticated = await authenticateWithSupabase(email, password);
   const authenticatedLocally = profile ? await verifyLocalProfilePassword(profile.id, password) : false;
   const canUseLocalAdminFallback =
+    process.env.NODE_ENV !== "production" &&
     Boolean(process.env.ADMIN_PASSWORD) &&
     safeEqual(password, process.env.ADMIN_PASSWORD) &&
     (normalizedUsername === localAdminUsername || (profile?.role === "super_admin" && profile.email === localAdminEmail));

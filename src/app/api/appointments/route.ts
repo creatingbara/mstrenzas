@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAppointmentBooking } from "@/lib/local-db";
 import { notifyNewAppointment } from "@/lib/push-notifications";
+import { requirePublicMutationOrigin } from "@/lib/security/origin-guard";
 import { appointmentBookingSchema } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -18,6 +19,9 @@ type AppointmentRequest = {
 };
 
 export async function POST(request: Request) {
+  const originError = requirePublicMutationOrigin(request);
+  if (originError) return originError;
+
   const body = (await request.json()) as AppointmentRequest;
   const clientKey = getClientKey(request);
 

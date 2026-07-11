@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import type { AuthenticatorTransportFuture, Base64URLString, WebAuthnCredential } from "@simplewebauthn/server";
 import { execute, query, queryOne } from "@/lib/db/pg";
 import type { UserProfile } from "@/types/staff";
@@ -54,7 +54,9 @@ export function ensurePasskeyTable() {
       last_used_at text,
       foreign key (user_id) references profiles(id) on delete cascade
     )`
-  ).then(() => undefined);
+  )
+    .then(() => execute("alter table user_passkeys enable row level security"))
+    .then(() => undefined);
   return passkeyTablePromise;
 }
 
@@ -157,7 +159,7 @@ export function createChallengeCookie(payload: Omit<ChallengePayload, "exp">) {
 export function readChallengeCookie(value?: string | null) {
   if (!value) return null;
   const [encoded, signature] = value.split(".");
-  if (!encoded || !signature || signature !== sign(encoded)) return null;
+  if (!encoded || !signature || !timingSafeEqualStrings(signature, sign(encoded))) return null;
 
   try {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as ChallengePayload;
@@ -197,6 +199,12 @@ function signPayload(payload: ChallengePayload) {
   return `${encoded}.${sign(encoded)}`;
 }
 
+function timingSafeEqualStrings(a: string, b: string) {
+  const bufferA = Buffer.from(a, "utf8");
+  const bufferB = Buffer.from(b, "utf8");
+  return bufferA.length === bufferB.length && timingSafeEqual(bufferA, bufferB);
+}
+
 function parseCookieHeader(header: string | null) {
   const cookies: Record<string, string> = {};
   if (!header) return cookies;
@@ -213,7 +221,8 @@ function parseCookieHeader(header: string | null) {
 }
 
 function sign(value: string) {
-  const secret = process.env.ADMIN_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "dev-ms-trenzas-session";
+  const secret = process.env.ADMIN_SESSION_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-ms-trenzas-session");
+  if (!secret) throw new Error("ADMIN_SESSION_SECRET is required in production.");
   return createHmac("sha256", secret).update(value).digest("base64url");
 }
 

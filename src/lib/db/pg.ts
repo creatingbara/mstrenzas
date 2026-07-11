@@ -38,6 +38,18 @@ function getConnectionConfig() {
 
 const globalForPg = globalThis as unknown as { __msTrenzasPgPool?: Pool };
 
+// Con SUPABASE_DB_CA (certificado CA del proyecto, PEM) la conexión verifica el
+// certificado del servidor. Sin él se mantiene TLS sin verificación para no
+// romper instalaciones existentes; descarga el CA en Supabase:
+// Project Settings -> Database -> SSL Configuration.
+function getSslConfig() {
+  const ca = process.env.SUPABASE_DB_CA;
+  if (ca) {
+    return { ca: ca.replace(/\\n/g, "\n"), rejectUnauthorized: true };
+  }
+  return { rejectUnauthorized: false };
+}
+
 function createPoolScope(): PoolScope {
   const { connectionString, hyperdrive } = getConnectionConfig();
 
@@ -59,7 +71,7 @@ function createPoolScope(): PoolScope {
   if (!globalForPg.__msTrenzasPgPool) {
     const pool = new Pool({
       connectionString,
-      ssl: { rejectUnauthorized: false },
+      ssl: getSslConfig(),
       max: Number(process.env.PG_POOL_MAX || 3),
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 15_000

@@ -1,4 +1,4 @@
-export type AppointmentStatus = "pendiente" | "confirmada" | "cancelada" | "completada" | "no_asistio";
+export type AppointmentStatus = "pendiente" | "confirmada" | "cancelada" | "completada" | "archivada" | "no_asistio";
 
 export type BusinessHour = {
   id: string;

@@ -1,4 +1,4 @@
-export type BookingStatus = "pendiente" | "confirmada" | "completada" | "cancelada";
+export type BookingStatus = "pendiente" | "confirmada" | "completada" | "archivada" | "cancelada";
 
 export type BookingRequest = {
   id: string;

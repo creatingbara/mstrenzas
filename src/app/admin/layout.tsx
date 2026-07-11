@@ -13,7 +13,7 @@ function getHostname(headerStore: Headers) {
   const originalHost = headerStore.get("x-original-host");
   const host = headerStore.get("host");
   const forwarded = headerStore.get("forwarded")?.match(/host=([^;]+)/i)?.[1];
-  const candidate = forwardedHost ?? originalHost ?? forwarded ?? host;
+  const candidate = host ?? forwardedHost ?? originalHost ?? forwarded;
   return candidate?.split(",")[0]?.split(":")[0]?.trim().toLowerCase();
 }
 

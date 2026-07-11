@@ -1265,47 +1265,57 @@ export async function createAppointmentBooking({
     throw new Error("Ese horario no está disponible para este colaborador. Elige otra fecha u hora.");
   }
 
-  const existing = await query<AppointmentBookingRow>(
-    `select * from appointment_bookings
-      where appointment_date = $1
-        and staff_member_id = $2
-        and status in ('pendiente', 'confirmada')
-        and start_time < $3
-        and end_time > $4`,
-    [appointmentDate, staff.id, endTime, startTime]
-  );
+  // La verificación de solapamiento y la inserción corren en una misma
+  // transacción serializada con un advisory lock por colaborador+fecha:
+  // dos requests simultáneos por el mismo horario no pueden insertarse ambos.
+  const row = await withTransaction(async (client) => {
+    await client.query("select pg_advisory_xact_lock(hashtext($1))", [`booking:${staff.id}:${appointmentDate}`]);
 
-  if (existing.length > 0) {
-    throw new Error("Ese horario ya fue reservado. Elige otra hora disponible.");
-  }
+    const existing = await client.query(
+      `select 1 from appointment_bookings
+        where appointment_date = $1
+          and staff_member_id = $2
+          and status in ('pendiente', 'confirmada')
+          and start_time < $3
+          and end_time > $4
+        limit 1`,
+      [appointmentDate, staff.id, endTime, startTime]
+    );
 
-  const row = await queryOne<AppointmentBookingRow>(
-    `insert into appointment_bookings (
-        id, service_id, staff_member_id, staff_name, service_name, client_name, phone, instagram, email,
-        appointment_date, start_time, end_time, duration_minutes, status, notes, reference_image_url
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pendiente', $14, $15)
-      returning *`,
-    [
-      randomUUID(),
-      service.id,
-      staff.id,
-      staff.fullName,
-      service.name,
-      values.fullName,
-      values.whatsapp,
-      values.instagram || null,
-      values.email || null,
-      appointmentDate,
-      startTime,
-      endTime,
-      service.durationMinutes,
-      values.note || null,
-      values.referenceImageUrl || null
-    ]
-  );
+    if (existing.rows.length > 0) {
+      throw new Error("Ese horario ya fue reservado. Elige otra hora disponible.");
+    }
 
-  return mapAppointmentBooking(row as AppointmentBookingRow);
+    const inserted = await client.query<AppointmentBookingRow>(
+      `insert into appointment_bookings (
+          id, service_id, staff_member_id, staff_name, service_name, client_name, phone, instagram, email,
+          appointment_date, start_time, end_time, duration_minutes, status, notes, reference_image_url
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pendiente', $14, $15)
+        returning *`,
+      [
+        randomUUID(),
+        service.id,
+        staff.id,
+        staff.fullName,
+        service.name,
+        values.fullName,
+        values.whatsapp,
+        values.instagram || null,
+        values.email || null,
+        appointmentDate,
+        startTime,
+        endTime,
+        service.durationMinutes,
+        values.note || null,
+        values.referenceImageUrl || null
+      ]
+    );
+
+    return inserted.rows[0];
+  });
+
+  return mapAppointmentBooking(row);
 }
 
 function parseDateKey(dateKey: string) {

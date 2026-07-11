@@ -10,6 +10,7 @@ import {
   Package,
   SlidersHorizontal,
   Settings,
+  UserRound,
   Users
 } from "lucide-react";
 import type { AdminSession } from "@/lib/auth/admin-session";
@@ -59,10 +60,30 @@ const collaboratorGroups: AdminNavGroup[] = [
   }
 ];
 
-function getGroupsForRole(role: StaffRole) {
+export function getGroupsForRole(role: StaffRole) {
   if (role === "super_admin") return superAdminGroups;
   if (role === "admin") return adminGroups;
   return collaboratorGroups;
+}
+
+export function getLinksForRole(role: StaffRole) {
+  return getGroupsForRole(role).flatMap((group) => group.links);
+}
+
+export function getMobileLinksForSession(session: AdminSession) {
+  const profilePath = `/admin/equipo/${session.staffMemberId || session.profileId}`;
+  const baseLinks = getLinksForRole(session.role);
+  const preferred = session.role === "colaborador"
+    ? ["/admin/mi-calendario"]
+    : ["/admin/dashboard", "/admin/citas", "/admin/calendario", "/admin/equipo"];
+  const links = preferred
+    .map((href) => baseLinks.find((link) => link.href === href))
+    .filter((link): link is AdminNavLink => Boolean(link));
+
+  return [
+    ...links,
+    { href: profilePath, label: "Perfil", icon: UserRound }
+  ].slice(0, 5);
 }
 
 function isActivePath(pathname: string, href: string) {

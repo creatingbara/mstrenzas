@@ -2,12 +2,12 @@
 
 import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, subMonths } from "date-fns";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, Lock, Phone, UserRound } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AppointmentBooking, AppointmentStatus, AvailabilityException } from "@/types/appointment";
 
-const statuses: AppointmentStatus[] = ["pendiente", "confirmada", "cancelada", "completada", "no_asistio"];
+const statuses: AppointmentStatus[] = ["pendiente", "confirmada", "cancelada", "completada", "archivada", "no_asistio"];
 const weekDays = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
 
 const statusLabels: Record<AppointmentStatus, string> = {
@@ -15,6 +15,7 @@ const statusLabels: Record<AppointmentStatus, string> = {
   confirmada: "Confirmada",
   cancelada: "Cancelada",
   completada: "Completada",
+  archivada: "Archivada",
   no_asistio: "No asistio"
 };
 
@@ -39,6 +40,11 @@ const statusStyles: Record<AppointmentStatus, { card: string; dot: string; chip:
     dot: "bg-sky-500",
     chip: "bg-sky-100 text-sky-800 dark:bg-sky-300/20 dark:text-sky-100"
   },
+  archivada: {
+    card: "border-violet-200 bg-violet-50 text-violet-950 dark:border-violet-300/30 dark:bg-violet-300/15 dark:text-violet-100",
+    dot: "bg-violet-500",
+    chip: "bg-violet-100 text-violet-800 dark:bg-violet-300/20 dark:text-violet-100"
+  },
   no_asistio: {
     card: "border-slate-200 bg-slate-100 text-slate-900 dark:border-white/15 dark:bg-white/10 dark:text-white",
     dot: "bg-slate-500",
@@ -61,17 +67,13 @@ export function AdminCalendarView({
   const [selectedDate, setSelectedDate] = useState(toDateKey(initialDate));
   const [items, setItems] = useState(initialAppointments);
   const [notice, setNotice] = useState<string | null>(null);
+  const detailRef = useRef<HTMLElement | null>(null);
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
     const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
     return eachDayOfInterval({ start, end });
   }, [monthDate]);
-  const monthListDays = useMemo(
-    () => eachDayOfInterval({ start: startOfMonth(monthDate), end: endOfMonth(monthDate) }),
-    [monthDate]
-  );
-
   const appointmentsByDate = useMemo(() => groupAppointmentsByDate(items), [items]);
   const blocksByDate = useMemo(() => groupBlocksByDate(exceptions), [exceptions]);
   const selectedAppointments = appointmentsByDate.get(selectedDate) ?? [];
@@ -104,6 +106,15 @@ export function AdminCalendarView({
     setMonthDate(startOfMonth(nextMonth));
     const nextSelected = toDateKey(nextMonth);
     if (!isSameMonth(parseDateKey(selectedDate), nextMonth)) setSelectedDate(nextSelected);
+  }
+
+  function selectDay(key: string) {
+    setSelectedDate(key);
+    window.setTimeout(() => {
+      if (window.matchMedia("(max-width: 1023px)").matches) {
+        detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 50);
   }
 
   return (
@@ -152,75 +163,12 @@ export function AdminCalendarView({
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa dark:bg-white/10 dark:text-pink-100">{notice}</p>}
 
       <div className="grid min-w-0 items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(380px,440px)]">
-        <div className="grid gap-3 lg:hidden">
-          {monthListDays.map((day) => {
-            const key = toDateKey(day);
-            const dayAppointments = appointmentsByDate.get(key) ?? [];
-            const dayBlocks = blocksByDate.get(key) ?? [];
-            const active = selectedDate === key;
-
-            return (
-              <button
-                key={key}
-                type="button"
-                className={cn(
-                  "min-w-0 rounded-lg border border-cocoa/10 bg-white p-4 text-left shadow-sm transition dark:border-white/10 dark:bg-white/5",
-                  active && "border-cocoa bg-pink-50 ring-2 ring-cocoa/25 dark:border-pink-300 dark:bg-white/10 dark:ring-pink-300/30"
-                )}
-                onClick={() => setSelectedDate(key)}
-              >
-                <div className="flex min-w-0 items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-cocoa dark:text-pink-300">
-                      {format(day, "EEE")}
-                    </p>
-                    <p className="mt-1 text-xl font-black text-ink dark:text-white">{format(day, "dd")}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {isSameDay(day, today) && (
-                      <span className="rounded-full bg-cocoa px-2.5 py-1 text-xs font-bold text-white dark:bg-pink-300 dark:text-cocoa">
-                        Hoy
-                      </span>
-                    )}
-                    {dayBlocks.length > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700 dark:bg-rose-300/20 dark:text-rose-100">
-                        <Lock size={12} />
-                        Bloqueado
-                      </span>
-                    )}
-                    <span className="rounded-full bg-cream px-2.5 py-1 text-xs font-bold text-cocoa dark:bg-white/10 dark:text-pink-100">
-                      {dayAppointments.length}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid gap-2">
-                  {dayAppointments.length ? (
-                    dayAppointments.slice(0, 4).map((appointment) => (
-                      <CalendarEvent key={appointment.id} appointment={appointment} />
-                    ))
-                  ) : (
-                    <p className="rounded-md bg-cream/60 px-3 py-2 text-sm font-semibold text-muted dark:bg-white/5 dark:text-pink-100/70">
-                      Sin citas.
-                    </p>
-                  )}
-                  {dayAppointments.length > 4 && (
-                    <span className="rounded-md bg-cocoa/10 px-3 py-2 text-sm font-bold text-cocoa dark:bg-white/10 dark:text-pink-100">
-                      +{dayAppointments.length - 4} citas mas
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="hidden overflow-hidden rounded-lg border border-cocoa/10 bg-white shadow-soft dark:border-white/10 dark:bg-white/5 lg:block">
+        <div className="overflow-hidden rounded-[1.35rem] border border-cocoa/10 bg-white shadow-soft dark:border-white/10 dark:bg-white/5 lg:rounded-lg">
           <div className="overflow-x-auto">
-            <div className="min-w-[920px]">
+            <div className="min-w-0 lg:min-w-[920px]">
               <div className="grid grid-cols-7 border-b border-cocoa/10 bg-cream/70 dark:border-white/10 dark:bg-white/10">
                 {weekDays.map((day) => (
-                  <div key={day} className="px-3 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-cocoa dark:text-pink-100">
+                  <div key={day} className="px-1 py-3 text-center text-[0.68rem] font-black uppercase tracking-[0.08em] text-cocoa dark:text-pink-100 sm:px-3 sm:text-xs sm:tracking-[0.12em]">
                     {day}
                   </div>
                 ))}
@@ -234,43 +182,59 @@ export function AdminCalendarView({
                   const active = selectedDate === key;
                   const outsideMonth = !isSameMonth(day, monthDate);
                   const visibleAppointments = dayAppointments.slice(0, 2);
+                  const mobileVisibleAppointments = dayAppointments.slice(0, 1);
 
                   return (
                     <button
                       key={key}
                       type="button"
                       className={cn(
-                        "min-h-[104px] border-b border-r border-cocoa/10 p-2 text-left align-top transition hover:bg-cream/60 dark:border-white/10 dark:hover:bg-white/10 xl:min-h-[112px] xl:p-3 2xl:min-h-[120px]",
+                        "min-h-[4.1rem] border-b border-r border-cocoa/10 p-1 text-left align-top transition hover:bg-cream/60 dark:border-white/10 dark:hover:bg-white/10 sm:min-h-[5.5rem] sm:p-2 lg:min-h-[104px] xl:min-h-[112px] xl:p-3 2xl:min-h-[120px]",
                         outsideMonth && "bg-slate-50 text-muted dark:bg-black/15 dark:text-pink-100/45",
                         active && "bg-pink-50 ring-2 ring-inset ring-cocoa/50 dark:bg-white/10 dark:ring-pink-300/70"
                       )}
-                      onClick={() => setSelectedDate(key)}
+                      onClick={() => selectDay(key)}
                     >
-                      <div className="mb-2 flex items-center justify-between gap-2">
+                      <div className="mb-1 flex items-center justify-between gap-1.5 sm:mb-2 sm:gap-2">
                         <span
                           className={cn(
-                            "grid size-8 place-items-center rounded-full text-sm font-black text-ink dark:text-white",
+                            "grid size-6 place-items-center rounded-full text-[0.68rem] font-black text-ink dark:text-white sm:size-8 sm:text-sm",
                             isSameDay(day, today) && "bg-cocoa text-white dark:bg-pink-300 dark:text-cocoa"
                           )}
                         >
                           {format(day, "d")}
                         </span>
                         {dayBlocks.length > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-1 text-[0.68rem] font-bold text-rose-700 dark:bg-rose-300/20 dark:text-rose-100">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-rose-700 dark:bg-rose-300/20 dark:text-rose-100 sm:px-2 sm:py-1 sm:text-[0.68rem]">
                             <Lock size={12} />
-                            Bloqueado
+                            <span className="hidden sm:inline">Bloqueado</span>
                           </span>
                         )}
                       </div>
 
-                      <div className="grid gap-1.5">
-                        {visibleAppointments.map((appointment) => (
-                          <CalendarEvent key={appointment.id} appointment={appointment} compact />
-                        ))}
+                      <div className="grid gap-0.5 sm:gap-1.5">
+                        <span className="grid gap-0.5 sm:hidden">
+                          {mobileVisibleAppointments.map((appointment) => (
+                            <CalendarEvent key={appointment.id} appointment={appointment} compact mobile />
+                          ))}
+                        </span>
+                        <span className="hidden gap-1.5 sm:grid">
+                          {visibleAppointments.map((appointment) => (
+                            <CalendarEvent key={appointment.id} appointment={appointment} compact />
+                          ))}
+                        </span>
                         {dayAppointments.length > visibleAppointments.length && (
-                          <span className="rounded-md bg-cocoa/10 px-2 py-1 text-xs font-bold text-cocoa dark:bg-white/10 dark:text-pink-100">
+                          <span className="hidden truncate rounded-md bg-cocoa/10 px-1.5 py-1 text-[0.64rem] font-bold text-cocoa dark:bg-white/10 dark:text-pink-100 sm:block sm:px-2 sm:text-xs">
                             +{dayAppointments.length - visibleAppointments.length} citas mas
                           </span>
+                        )}
+                        {dayAppointments.length > mobileVisibleAppointments.length && (
+                          <span className="truncate rounded-md bg-cocoa/10 px-1.5 py-0.5 text-[0.6rem] font-bold text-cocoa dark:bg-white/10 dark:text-pink-100 sm:hidden">
+                            +{dayAppointments.length - mobileVisibleAppointments.length}
+                          </span>
+                        )}
+                        {!dayAppointments.length && dayBlocks.length === 0 && (
+                          <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-cocoa/15 dark:bg-white/15 sm:hidden" />
                         )}
                       </div>
                     </button>
@@ -281,7 +245,7 @@ export function AdminCalendarView({
           </div>
         </div>
 
-        <aside className="min-w-0 max-w-full overflow-hidden rounded-lg border border-cocoa/10 bg-white p-5 shadow-soft dark:border-white/10 dark:bg-white/5">
+        <aside ref={detailRef} className="scroll-mt-24 min-w-0 max-w-full overflow-hidden rounded-[1.35rem] border border-cocoa/10 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/5 lg:rounded-lg lg:p-5">
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-cocoa dark:text-pink-300">Detalle del dia</p>
@@ -315,15 +279,23 @@ export function AdminCalendarView({
   );
 }
 
-function CalendarEvent({ appointment, compact = false }: { appointment: AppointmentBooking; compact?: boolean }) {
+function CalendarEvent({
+  appointment,
+  compact = false,
+  mobile = false
+}: {
+  appointment: AppointmentBooking;
+  compact?: boolean;
+  mobile?: boolean;
+}) {
   const styles = statusStyles[appointment.status];
   const staffColor = getStaffColor(appointment.staffName);
 
   return (
-    <div className={cn("min-w-0 rounded-md border px-2 py-1.5 shadow-sm", styles.card)}>
+    <div className={cn("min-w-0 rounded-md border px-1.5 py-1 shadow-sm sm:px-2 sm:py-1.5", mobile && "border-transparent bg-transparent px-0 py-0 shadow-none", styles.card)}>
       <div className="flex min-w-0 items-center gap-1.5">
-        <span className="h-2.5 w-1 shrink-0 rounded-full" style={{ backgroundColor: staffColor }} />
-        <span className="truncate text-xs font-black">{appointment.startTime} {appointment.clientName}</span>
+        <span className={cn("h-2.5 w-1 shrink-0 rounded-full", mobile && "size-1.5")} style={{ backgroundColor: staffColor }} />
+        <span className={cn("truncate text-[0.62rem] font-black sm:text-xs", mobile && "sr-only")}>{appointment.startTime} {appointment.clientName}</span>
       </div>
       {!compact && <p className="mt-1 truncate text-xs opacity-80">{appointment.serviceName}</p>}
     </div>
