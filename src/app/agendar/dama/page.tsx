@@ -1,14 +1,12 @@
 import { ServiceCard } from "@/components/public/ServiceCard";
+import { getAgendaServicesForAudience } from "@/lib/agenda-services";
 import { getAgendaPage, getServices, getSiteSettings } from "@/lib/local-db";
 
 export const dynamic = "force-dynamic";
 
 export default async function BookWomanPage() {
   const [page, services, settings] = await Promise.all([getAgendaPage("dama"), getServices(), getSiteSettings()]);
-  const activeServices = services.filter((service) => service.active !== false);
-  const items = page.serviceSlugs
-    .map((slug) => activeServices.find((service) => service.slug === slug))
-    .filter(Boolean) as typeof activeServices;
+  const items = getAgendaServicesForAudience(page.serviceSlugs, services, "dama");
 
   return (
     <section className="section-pad">
