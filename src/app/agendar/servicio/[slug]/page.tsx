@@ -41,6 +41,7 @@ export default async function ServiceBookingPage({ params }: { params: Promise<{
             service={service}
             bookingData={bookingData}
             whatsappPhone={settings.whatsapp}
+            bookingPolicy={settings.bookingPolicy}
           />
         )}
       </div>
