@@ -8,7 +8,8 @@ export function HeroSection({ settings, section }: { settings: SiteSettings; sec
   const title = section?.title || settings.heroTitle;
   const subtitle = section?.subtitle || settings.heroSubtitle;
   const badge = section?.content || "Belleza protectora con acabado premium";
-  const imageUrl = section?.imageUrl || "/brand/hero-ms-trenzas.jpg";
+  const imageUrl = section?.imageUrl || "/brand/ms-estudio-logo.png";
+  const isBrandArtwork = imageUrl.includes("ms-estudio-logo");
   const buttonLabel = section?.buttonLabel || "Agendar cita";
   const buttonUrl = section?.buttonUrl || "/catalogo";
 
@@ -39,16 +40,18 @@ export function HeroSection({ settings, section }: { settings: SiteSettings; sec
             </Link>
           </div>
         </div>
-        <div className="relative min-h-[420px] overflow-hidden rounded-lg bg-cream shadow-soft lg:min-h-[620px]">
-          <img
-            src={imageUrl}
-            alt="Trabajo de trenzas realizado por M&S Trenzas"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/78 to-transparent p-6 text-white">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">M&S Trenzas</p>
-            <p className="mt-2 max-w-sm text-2xl font-semibold">Estilos pensados para cuidarte y hacerte brillar.</p>
-          </div>
+        <div className="relative grid min-h-[420px] place-items-center overflow-hidden rounded-lg bg-[radial-gradient(circle_at_50%_25%,#fff8fc_0%,#f2e8f2_60%,#e8d9e9_100%)] shadow-soft lg:min-h-[620px]">
+          {isBrandArtwork ? (
+            <img src={imageUrl} alt="M&S Estudio — El arte de transformar" className="max-h-[78%] w-[78%] object-contain" />
+          ) : (
+            <>
+              <img src={imageUrl} alt="Trabajo de trenzas realizado por M&S Estudio" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/78 to-transparent p-6 text-white">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em]">M&amp;S Estudio</p>
+                <p className="mt-2 max-w-sm text-2xl font-semibold">Estilos pensados para cuidarte y hacerte brillar.</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

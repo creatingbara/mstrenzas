@@ -4,7 +4,7 @@ import { requireAdminPageAccess } from "@/lib/admin-auth";
 import { getAgendaPages, getBookingMenuItems, getServices } from "@/lib/local-db";
 
 export const metadata = {
-  title: "Agenda Cita | Panel M&S Trenzas"
+  title: "Agenda Cita | Panel M&S Estudio"
 };
 
 export default async function AdminBookingMenuPage() {

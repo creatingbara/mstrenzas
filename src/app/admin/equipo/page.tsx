@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata = {
-  title: "Equipo y Accesos | Panel M&S Trenzas"
+  title: "Equipo y Accesos | Panel M&S Estudio"
 };
 
 export default async function TeamAccessPage() {
@@ -51,7 +51,7 @@ export default async function TeamAccessPage() {
       isActive: profile.isActive,
       avatarUrl: profile.avatarUrl,
       specialty: profile.role === "super_admin" ? "Acceso completo del sistema" : "Administracion",
-      calendarColor: profile.role === "super_admin" ? "#65004d" : "#9b1178",
+      calendarColor: "#310032",
       serviceIds: [],
       serviceNames: [],
       upcomingAppointments: 0,

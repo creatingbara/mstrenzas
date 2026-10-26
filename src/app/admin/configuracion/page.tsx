@@ -3,7 +3,7 @@ import { requireAdminPageAccess } from "@/lib/admin-auth";
 import { getSiteSettings } from "@/lib/local-db";
 
 export const metadata = {
-  title: "Configuración | Panel M&S Trenzas"
+  title: "Configuración | Panel M&S Estudio"
 };
 
 export default async function AdminSettingsPage() {

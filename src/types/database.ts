@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-type BookingStatus = "pendiente" | "confirmada" | "completada" | "cancelada";
+type BookingStatus = "pendiente" | "confirmada" | "completada" | "archivada" | "cancelada";
 
 export type Database = {
   public: {
@@ -248,7 +248,7 @@ export type Database = {
           start_time: string;
           end_time: string;
           duration_minutes: number;
-          status: "pendiente" | "confirmada" | "cancelada" | "completada" | "no_asistio";
+          status: "pendiente" | "confirmada" | "cancelada" | "completada" | "archivada" | "no_asistio";
           notes: string | null;
           reference_image_url: string | null;
           created_at: string;
@@ -266,7 +266,7 @@ export type Database = {
           start_time: string;
           end_time: string;
           duration_minutes: number;
-          status?: "pendiente" | "confirmada" | "cancelada" | "completada" | "no_asistio";
+          status?: "pendiente" | "confirmada" | "cancelada" | "completada" | "archivada" | "no_asistio";
           notes?: string | null;
           reference_image_url?: string | null;
           created_at?: string;

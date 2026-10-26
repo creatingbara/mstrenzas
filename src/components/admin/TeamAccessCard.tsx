@@ -53,7 +53,7 @@ export function TeamAccessCard({
 
   return (
     <article className="min-w-0 overflow-hidden rounded-lg border border-cocoa/10 bg-white shadow-[0_18px_50px_rgba(101,0,77,0.08)]">
-      <div className="relative h-24 bg-[radial-gradient(circle_at_top_left,rgba(193,132,168,0.62),transparent_34%),linear-gradient(135deg,#65004d,#2a001f)]">
+      <div className="relative h-24 bg-[radial-gradient(circle_at_top_left,rgba(51,4,40,0.62),transparent_34%),linear-gradient(135deg,#310032,#1b071b)]">
         <span
           className={cn(
             "absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold",
@@ -76,13 +76,13 @@ export function TeamAccessCard({
           ) : (
             <span
               className="relative z-10 grid size-24 shrink-0 place-items-center rounded-full border-4 border-white text-xl font-black text-white shadow-soft"
-              style={{ backgroundColor: member.calendarColor || "#9b1178" }}
+              style={{ backgroundColor: member.calendarColor || "#310032" }}
             >
               {initials}
             </span>
           )}
           <span className="mb-2 flex min-w-0 items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">
-            <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: member.calendarColor || "#9b1178" }} />
+            <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: member.calendarColor || "#310032" }} />
             <span className="truncate">Calendario</span>
           </span>
         </div>

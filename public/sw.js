@@ -1,5 +1,5 @@
-const CACHE_NAME = "ms-trenzas-static-v2";
-const STATIC_ASSETS = ["/manifest.json", "/icons/icon.svg"];
+const CACHE_NAME = "ms-estudio-static-v3";
+const STATIC_ASSETS = ["/manifest.json", "/brand/ms-estudio-app-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -30,20 +30,22 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((cached) => cached || Response.error())
+    )
   );
 });
 
 self.addEventListener("push", (event) => {
   const payload = readPushPayload(event);
-  const title = payload.title || "M&S Trenzas";
+  const title = payload.title || "M&S Estudio";
   const url = payload.url || "/admin";
 
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body || "Tienes una nueva notificacion.",
-      icon: "/icons/icon.svg",
-      badge: "/icons/icon.svg",
+      icon: "/brand/ms-estudio-app-icon.png",
+      badge: "/brand/ms-estudio-app-icon.png",
       tag: payload.tag || "ms-trenzas",
       data: { url },
       actions: [

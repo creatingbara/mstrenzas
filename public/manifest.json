@@ -1,17 +1,17 @@
 {
-  "name": "M&S Trenzas",
+  "name": "M&S Estudio",
   "short_name": "M&S",
-  "description": "Trenzas africanas y extensiones 100% Human Hair con acabado profesional.",
+  "description": "El arte de transformar. Trenzas africanas y extensiones 100% Human Hair.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fff8fc",
-  "theme_color": "#65004d",
+  "theme_color": "#310032",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/brand/ms-estudio-app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Fingerprint, LockKeyhole } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
@@ -18,6 +18,7 @@ export function AdminLoginForm() {
 }
 
 function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -46,7 +47,7 @@ function LoginForm() {
         });
         const result = (await response.json()) as { available?: boolean };
         setPasskeyAvailable(Boolean(response.ok && result.available));
-      } catch (error) {
+      } catch {
         if (!controller.signal.aborted) setPasskeyAvailable(false);
       } finally {
         if (!controller.signal.aborted) setCheckingPasskey(false);
@@ -74,7 +75,7 @@ function LoginForm() {
     if (localResponse.ok) {
       const result = (await localResponse.json()) as { redirectTo?: string };
       const nextPath = requestedNextPath || result.redirectTo || "/admin/dashboard";
-      window.location.href = nextPath;
+      router.replace(nextPath);
       return;
     }
 
@@ -113,7 +114,7 @@ function LoginForm() {
       const result = (await verifyResponse.json()) as { redirectTo?: string; error?: string };
       if (!verifyResponse.ok) throw new Error(result.error || "No se pudo verificar tu identidad.");
 
-      window.location.href = result.redirectTo || "/admin/dashboard";
+      router.replace(result.redirectTo || "/admin/dashboard");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No se pudo verificar tu identidad. Puedes seguir entrando con tu contrasena.");
     } finally {

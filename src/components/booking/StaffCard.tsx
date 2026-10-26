@@ -34,14 +34,14 @@ export function StaffCard({
         ) : (
           <div
             className="grid size-14 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
-            style={{ backgroundColor: staff.calendarColor || "#65004d" }}
+            style={{ backgroundColor: staff.calendarColor || "#310032" }}
           >
             {initials}
           </div>
         )}
         <div>
           <h3 className="font-display text-2xl font-bold">{staff.fullName}</h3>
-          <p className="text-sm font-semibold text-cocoa">{staff.specialty || "Colaboradora M&S Trenzas"}</p>
+          <p className="text-sm font-semibold text-cocoa">{staff.specialty || "Colaboradora de M&S Estudio"}</p>
           {staff.bio && <p className="mt-2 text-sm leading-6 text-muted">{staff.bio}</p>}
         </div>
       </div>

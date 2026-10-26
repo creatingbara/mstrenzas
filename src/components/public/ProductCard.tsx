@@ -17,12 +17,14 @@ export function ProductCard({ product, whatsappPhone }: { product: Product; what
         <h3 className="font-display text-2xl font-bold">{product.name}</h3>
         <p className="mt-2 text-sm leading-6 text-muted">{product.description}</p>
         <p className="mt-4 text-sm font-bold text-cocoa">{formatPrice(product.price, !product.price)}</p>
-        <Link href={whatsappLink(`Hola M&S Trenzas, quiero cotizar: ${product.name}`, whatsappPhone)} target="_blank" className="mt-5 block">
-          <Button className="w-full">
-            <MessageCircle size={18} />
-            Cotizar por WhatsApp
-          </Button>
-        </Link>
+        {whatsappPhone.trim() && (
+          <Link href={whatsappLink(`Hola M&S Estudio, quiero cotizar: ${product.name}`, whatsappPhone)} target="_blank" className="mt-5 block">
+            <Button className="w-full">
+              <MessageCircle size={18} />
+              Cotizar por WhatsApp
+            </Button>
+          </Link>
+        )}
       </div>
     </Card>
   );

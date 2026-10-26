@@ -4,7 +4,7 @@ import { requireAdminPageAccess } from "@/lib/admin-auth";
 import { getServiceById, getServiceStaffIds, getStaffMembers } from "@/lib/local-db";
 
 export const metadata = {
-  title: "Editar servicio | Panel M&S Trenzas"
+  title: "Editar servicio | Panel M&S Estudio"
 };
 
 export default async function EditServiceAgendaPage({ params }: { params: Promise<{ id: string }> }) {

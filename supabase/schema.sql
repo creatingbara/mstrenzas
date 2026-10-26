@@ -435,6 +435,32 @@ alter table public.app_seo_settings enable row level security;
 alter table public.app_footer_settings enable row level security;
 alter table public.app_admin_ui_settings enable row level security;
 
+-- SEGURIDAD: RLS en TODAS las tablas de negocio.
+-- La app accede a Postgres con la conexión directa (rol postgres, dueño de las
+-- tablas), que NO se ve afectada por RLS. Sin esto, cualquier persona con la
+-- anon key pública podría leer/escribir estas tablas vía la API REST de
+-- Supabase (PostgREST): hashes de contraseñas, teléfonos de clientas, passkeys,
+-- suscripciones push, etc. Con RLS activado y sin policies, el acceso anon y
+-- authenticated queda denegado por defecto.
+alter table public.business_hours enable row level security;
+alter table public.availability_exceptions enable row level security;
+alter table public.appointment_bookings enable row level security;
+alter table public.profiles enable row level security;
+alter table public.staff_members enable row level security;
+alter table public.user_passkeys enable row level security;
+alter table public.push_subscriptions enable row level security;
+alter table public.push_notification_logs enable row level security;
+alter table public.staff_services enable row level security;
+alter table public.staff_business_hours enable row level security;
+alter table public.staff_availability_exceptions enable row level security;
+alter table public.site_settings enable row level security;
+alter table public.gallery_items enable row level security;
+alter table public.booking_menu_items enable row level security;
+alter table public.agenda_pages enable row level security;
+alter table public.service_overrides enable row level security;
+alter table public.custom_services enable row level security;
+alter table public.products enable row level security;
+
 do $$
 begin
   if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'app_theme_settings' and policyname = 'app_theme_settings_public_read') then

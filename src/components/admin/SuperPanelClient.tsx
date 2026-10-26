@@ -258,7 +258,7 @@ export function SuperPanelClient({
   return (
     <div className="grid gap-6">
       <section className="overflow-hidden rounded-lg border border-cocoa/10 bg-white shadow-[0_18px_50px_rgba(101,0,77,0.08)]">
-        <div className="border-b border-cocoa/10 bg-[radial-gradient(circle_at_top_left,rgba(193,132,168,0.34),transparent_36%),linear-gradient(135deg,#65004d,#2a001f)] p-6 text-white">
+        <div className="border-b border-cocoa/10 bg-[radial-gradient(circle_at_top_left,rgba(51,4,40,0.34),transparent_36%),linear-gradient(135deg,#310032,#1b071b)] p-6 text-white">
           <p className="text-xs font-black uppercase tracking-[0.32em] text-pink-100/80">Centro de control global</p>
           <h2 className="mt-3 font-display text-4xl font-bold">Super Panel</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-pink-100/82">
@@ -843,41 +843,6 @@ function PreviewTab({
   );
 }
 
-function PreparedTab({
-  tab,
-  theme,
-  navigation,
-  sectionsByPage
-}: {
-  tab: { label: string; icon: typeof Palette };
-  theme: AppThemeSettings;
-  navigation: AppNavigationItem[];
-  sectionsByPage: Record<string, AppPageSection[]>;
-}) {
-  const pageCount = Object.keys(sectionsByPage).length;
-
-  return (
-    <section className="rounded-lg border border-cocoa/10 bg-white p-6">
-      <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div>
-          <div className="grid size-14 place-items-center rounded-lg bg-cream text-cocoa">
-            <tab.icon size={24} />
-          </div>
-          <h3 className="mt-4 font-display text-3xl font-bold">{tab.label}</h3>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            Esta area queda preparada en la estructura del Super Panel. La base de datos ya tiene tabla dedicada para extenderla en la siguiente fase sin tocar las areas actuales.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Metric label="Color principal" value={theme.primaryColor} />
-          <Metric label="Items menu" value={String(navigation.length)} />
-          <Metric label="Paginas listas" value={String(pageCount)} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function ThemePreview({ theme }: { theme: AppThemeSettings }) {
   const style = {
     "--preview-primary": theme.primaryColor || defaultThemeSettings.primaryColor,
@@ -898,7 +863,7 @@ function ThemePreview({ theme }: { theme: AppThemeSettings }) {
           </span>
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: "var(--preview-primary)" }}>
-              M&S Trenzas
+              M&amp;S Estudio
             </p>
             <h3 className="font-display text-3xl font-bold">Identidad premium</h3>
           </div>
@@ -971,7 +936,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   return (
     <Field label={label}>
       <div className="grid grid-cols-[48px_1fr] gap-2">
-        <input type="color" className="h-11 w-12 rounded-lg border border-cocoa/15 bg-white p-1" value={value || "#65004d"} onChange={(event) => onChange(event.target.value)} />
+        <input type="color" className="h-11 w-12 rounded-lg border border-cocoa/15 bg-white p-1" value={value || "#310032"} onChange={(event) => onChange(event.target.value)} />
         <Input value={value} onChange={(event) => onChange(event.target.value)} />
       </div>
     </Field>

@@ -1,8 +1,9 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from "@/lib/auth/admin-session";
 import { canAccessAdminPath } from "@/lib/auth/permissions";
 import { getProfileById, getStaffMemberByProfileId } from "@/lib/local-db";
+import { isAdminRequestAllowed } from "@/lib/security/origin-guard";
 
 function deniedRedirectPath(role: string) {
   return role === "colaborador" ? "/admin/mi-calendario" : "/admin/dashboard";
@@ -13,6 +14,9 @@ export async function hasAdminAccess() {
 }
 
 export async function getAdminSession() {
+  const headerStore = await headers();
+  if (!isAdminRequestAllowed(headerStore)) return null;
+
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
   const session = await verifyAdminSessionToken(token);

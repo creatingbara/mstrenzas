@@ -10,16 +10,20 @@ import type { Service } from "@/types/service";
 export function ServiceCard({ service, whatsappPhone }: { service: Service; whatsappPhone: string }) {
   const serviceKey = service.slug || service.id;
   const bookingHref = `/agendar/servicio/${serviceKey}`;
-  const message = service.whatsappMessage || `Hola M&S Trenzas, quiero consultar por el servicio: ${service.name}.`;
+  const message = service.whatsappMessage || `Hola M&S Estudio, quiero consultar por el servicio: ${service.name}.`;
   const priceText = service.priceLabel || formatPrice(service.priceFrom, service.requiresQuote);
   const durationText = service.durationLabel || formatDuration(service.durationMinutes);
   const canBook = service.bookingEnabled !== false;
-  const canWhatsApp = service.whatsappEnabled !== false;
+  const canWhatsApp = service.whatsappEnabled !== false && Boolean(whatsappPhone.trim());
 
   return (
     <Card className="overflow-hidden p-0">
       <Link href={`/catalogo/${service.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-cream">
-        <Image src={service.imageUrl} alt={service.name} fill className="object-cover transition duration-500 hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
+        {service.imageUrl ? (
+          <Image src={service.imageUrl} alt={service.name} fill className="object-cover transition duration-500 hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
+        ) : (
+          <span className="grid h-full place-items-center px-5 text-center text-sm font-semibold text-muted">Imagen pendiente de agregar</span>
+        )}
       </Link>
       <div className="p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -27,7 +31,7 @@ export function ServiceCard({ service, whatsappPhone }: { service: Service; what
           <span className="text-sm font-bold text-ink">{priceText}</span>
         </div>
         <h3 className="font-display text-2xl font-bold">{service.name}</h3>
-        <p className="mt-2 min-h-12 text-sm leading-6 text-muted">{service.description}</p>
+        {service.description && <p className="mt-2 min-h-12 text-sm leading-6 text-muted">{service.description}</p>}
         <div className="mt-4 flex items-center gap-2 text-sm text-muted">
           <Clock size={16} />
           {durationText}

@@ -512,21 +512,26 @@ export function themeCssVariables(theme: AppThemeSettings) {
 }
 
 function mapTheme(row: ThemeRow): AppThemeSettings {
+  const isLegacyLogo = (value: string | null) => value === "/brand/logo-ms-trenzas.jpg";
+  const isLegacyColor = (value: string | null) => Boolean(value && ["#65004d", "#9b1178", "#c8a45d"].includes(value.toLowerCase()));
+  const headingFont = row.font_heading || "";
+  const bodyFont = row.font_body || "";
+
   return {
     id: row.id,
-    logoUrl: row.logo_url || defaultThemeSettings.logoUrl,
-    logoDarkUrl: row.logo_dark_url || defaultThemeSettings.logoDarkUrl,
-    faviconUrl: row.favicon_url || defaultThemeSettings.faviconUrl,
-    primaryColor: row.primary_color || defaultThemeSettings.primaryColor,
-    secondaryColor: row.secondary_color || defaultThemeSettings.secondaryColor,
-    accentColor: row.accent_color || defaultThemeSettings.accentColor,
+    logoUrl: !row.logo_url || isLegacyLogo(row.logo_url) ? defaultThemeSettings.logoUrl : row.logo_url,
+    logoDarkUrl: !row.logo_dark_url || isLegacyLogo(row.logo_dark_url) ? defaultThemeSettings.logoDarkUrl : row.logo_dark_url,
+    faviconUrl: !row.favicon_url || row.favicon_url === "/icons/icon.svg" ? defaultThemeSettings.faviconUrl : row.favicon_url,
+    primaryColor: !row.primary_color || isLegacyColor(row.primary_color) ? defaultThemeSettings.primaryColor : row.primary_color,
+    secondaryColor: !row.secondary_color || isLegacyColor(row.secondary_color) ? defaultThemeSettings.secondaryColor : row.secondary_color,
+    accentColor: !row.accent_color || isLegacyColor(row.accent_color) ? defaultThemeSettings.accentColor : row.accent_color,
     backgroundColor: row.background_color || defaultThemeSettings.backgroundColor,
     textColor: row.text_color || defaultThemeSettings.textColor,
-    darkPrimaryColor: row.dark_primary_color || defaultThemeSettings.darkPrimaryColor,
-    darkBackgroundColor: row.dark_background_color || defaultThemeSettings.darkBackgroundColor,
+    darkPrimaryColor: !row.dark_primary_color || row.dark_primary_color.toLowerCase() === "#f0a9d9" ? defaultThemeSettings.darkPrimaryColor : row.dark_primary_color,
+    darkBackgroundColor: !row.dark_background_color || row.dark_background_color.toLowerCase() === "#15000f" ? defaultThemeSettings.darkBackgroundColor : row.dark_background_color,
     darkTextColor: row.dark_text_color || defaultThemeSettings.darkTextColor,
-    fontHeading: row.font_heading || defaultThemeSettings.fontHeading,
-    fontBody: row.font_body || defaultThemeSettings.fontBody,
+    fontHeading: !headingFont || headingFont.toLowerCase().includes("playfair") ? defaultThemeSettings.fontHeading : headingFont,
+    fontBody: !bodyFont || bodyFont.toLowerCase().includes("inter") ? defaultThemeSettings.fontBody : bodyFont,
     borderRadius: row.border_radius || defaultThemeSettings.borderRadius,
     buttonStyle: row.button_style || defaultThemeSettings.buttonStyle,
     cardStyle: row.card_style || defaultThemeSettings.cardStyle,
@@ -556,7 +561,7 @@ function mapPageSection(row: PageSectionRow): AppPageSection {
     title: row.title || "",
     subtitle: row.subtitle || "",
     content: row.content || "",
-    imageUrl: row.image_url || "",
+    imageUrl: row.image_url === "/brand/hero-ms-trenzas.jpg" ? defaultThemeSettings.logoUrl : row.image_url || "",
     buttonLabel: row.button_label || "",
     buttonUrl: row.button_url || "",
     sortOrder: Number(row.sort_order || 0),
@@ -569,28 +574,30 @@ function mapPageSection(row: PageSectionRow): AppPageSection {
 
 function mapSeo(row: SeoRow): AppSeoSettings {
   const fallback = defaultSeoSettings[row.page_key] || defaultSeoSettings.home;
+  const legacyTitle = row.title?.replace("M&S Trenzas", "M&S Estudio");
   return {
     id: row.id,
     pageKey: row.page_key,
-    title: row.title || fallback.title,
+    title: legacyTitle || fallback.title,
     description: row.description || fallback.description,
     keywords: row.keywords || fallback.keywords,
-    ogImageUrl: row.og_image_url || fallback.ogImageUrl,
+    ogImageUrl: row.og_image_url === "/brand/hero-ms-trenzas.jpg" ? fallback.ogImageUrl : row.og_image_url || fallback.ogImageUrl,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
 }
 
 function mapFooter(row: FooterRow): AppFooterSettings {
+  const legacyDescription = "Trenzas africanas, estilos protectores y extensiones 100% Human Hair con acabado profesional.";
   return {
     id: row.id,
-    businessName: row.business_name || defaultFooterSettings.businessName,
-    description: row.description || defaultFooterSettings.description,
+    businessName: row.business_name === "M&S Trenzas" ? defaultFooterSettings.businessName : row.business_name || defaultFooterSettings.businessName,
+    description: row.description === legacyDescription ? defaultFooterSettings.description : row.description || defaultFooterSettings.description,
     whatsapp: row.whatsapp || defaultFooterSettings.whatsapp,
     instagramUrl: row.instagram_url || defaultFooterSettings.instagramUrl,
     address: row.address || defaultFooterSettings.address,
     schedule: row.schedule || defaultFooterSettings.schedule,
-    copyrightText: row.copyright_text || defaultFooterSettings.copyrightText,
+    copyrightText: row.copyright_text?.replace("M&S Trenzas", "M&S Estudio") || defaultFooterSettings.copyrightText,
     updatedAt: row.updated_at
   };
 }
@@ -600,9 +607,9 @@ function mapAdminUi(row: AdminUiRow): AppAdminUiSettings {
     id: row.id,
     adminTitle: row.admin_title || defaultAdminUiSettings.adminTitle,
     adminSubtitle: row.admin_subtitle || defaultAdminUiSettings.adminSubtitle,
-    sidebarLogoUrl: row.sidebar_logo_url || defaultAdminUiSettings.sidebarLogoUrl,
-    sidebarColor: row.sidebar_color || defaultAdminUiSettings.sidebarColor,
-    sidebarAccentColor: row.sidebar_accent_color || defaultAdminUiSettings.sidebarAccentColor,
+    sidebarLogoUrl: !row.sidebar_logo_url || row.sidebar_logo_url === "/brand/logo-ms-trenzas.jpg" ? defaultAdminUiSettings.sidebarLogoUrl : row.sidebar_logo_url,
+    sidebarColor: !row.sidebar_color || ["#320024", "#65004d"].includes(row.sidebar_color.toLowerCase()) ? defaultAdminUiSettings.sidebarColor : row.sidebar_color,
+    sidebarAccentColor: !row.sidebar_accent_color || ["#9b1178", "#c8a45d"].includes(row.sidebar_accent_color.toLowerCase()) ? defaultAdminUiSettings.sidebarAccentColor : row.sidebar_accent_color,
     updatedAt: row.updated_at
   };
 }

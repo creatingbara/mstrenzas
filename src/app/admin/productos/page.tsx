@@ -3,7 +3,7 @@ import { requireAdminPageAccess } from "@/lib/admin-auth";
 import { getProducts } from "@/lib/local-db";
 
 export const metadata = {
-  title: "Productos | Panel M&S Trenzas"
+  title: "Productos | Panel M&S Estudio"
 };
 
 export default async function AdminProductsPage() {

@@ -29,18 +29,24 @@ export default async function ServiceBookingPage({ params }: { params: Promise<{
             <p className="mt-3 leading-7 text-muted">
               Este servicio requiere confirmación por WhatsApp antes de reservar. Escríbenos para revisar disponibilidad, precio y detalles.
             </p>
-            <Link href={whatsappLink(service.whatsappMessage || `Hola M&S Trenzas, quiero consultar por el servicio: ${service.name}.`, settings.whatsapp)} target="_blank" className="mt-6 inline-block">
-              <Button>
-                <MessageCircle size={18} />
-                Cotizar por WhatsApp
-              </Button>
-            </Link>
+            {settings.whatsapp.trim() ? (
+              <Link href={whatsappLink(service.whatsappMessage || `Hola M&S Estudio, quiero consultar por el servicio: ${service.name}.`, settings.whatsapp)} target="_blank" className="mt-6 inline-block">
+                <Button>
+                  <MessageCircle size={18} />
+                  Cotizar por WhatsApp
+                </Button>
+              </Link>
+            ) : (
+              <p className="mt-6 rounded-lg bg-cream p-3 text-sm font-medium text-muted">La agenda aún no está lista para este servicio. Puedes volver al catálogo o contactar al estudio desde la página de contacto.</p>
+            )}
           </div>
         ) : (
           <BookingScheduler
             service={service}
             bookingData={bookingData}
             whatsappPhone={settings.whatsapp}
+            whatsappMessageTemplate={settings.whatsappMessage}
+            bookingPolicy={settings.bookingPolicy}
           />
         )}
       </div>

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata = {
-  title: "Servicios del miembro | Panel M&S Trenzas"
+  title: "Servicios del miembro | Panel M&S Estudio"
 };
 
 export default async function TeamMemberServicesPage({ params }: { params: Promise<{ id: string }> }) {

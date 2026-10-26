@@ -12,6 +12,8 @@ export function BookingCalendar({
   serviceId,
   staffMemberId,
   durationMinutes,
+  prepMinutes,
+  bufferAfterMinutes,
   staffMembers,
   schedulesByStaff,
   selectedDate,
@@ -20,6 +22,8 @@ export function BookingCalendar({
   serviceId: string;
   staffMemberId?: string | null;
   durationMinutes: number;
+  prepMinutes?: number | null;
+  bufferAfterMinutes?: number | null;
   staffMembers: StaffMember[];
   schedulesByStaff: Record<string, StaffScheduleData>;
   selectedDate?: Date | null;
@@ -32,10 +36,12 @@ export function BookingCalendar({
       staffMemberId,
       month,
       durationMinutes,
+      prepMinutes,
+      bufferAfterMinutes,
       staffMembers,
       schedulesByStaff
     });
-  }, [durationMinutes, month, schedulesByStaff, serviceId, staffMemberId, staffMembers]);
+  }, [bufferAfterMinutes, durationMinutes, month, prepMinutes, schedulesByStaff, serviceId, staffMemberId, staffMembers]);
   const weeks = getCalendarWeeks(month);
   const hasMonthAvailability = availableDays.length > 0;
 

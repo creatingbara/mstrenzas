@@ -20,7 +20,7 @@ export async function POST() {
   }
 
   const deliveries = await sendPushNotification(subscriptions, {
-    title: "Prueba M&S Trenzas",
+    title: "Prueba M&S Estudio",
     body: "Las notificaciones del panel estan funcionando en este dispositivo.",
     url: "/admin/dashboard",
     tag: `push-test-${session.profileId}-${Date.now()}`

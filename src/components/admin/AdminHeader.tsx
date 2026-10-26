@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, CalendarClock, CheckCircle2, ChevronDown, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CheckCircle2, ChevronDown, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AdminSession } from "@/lib/auth/admin-session";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ const roleLabels: Record<AdminSession["role"], string> = {
 };
 
 type ThemeMode = "light" | "dark" | "system";
-type OpenMenu = "theme" | "notifications" | "profile" | null;
+type OpenMenu = "theme" | "profile" | null;
 
 const themeOptions: Record<ThemeMode, { label: string; icon: typeof Sun; description: string }> = {
   light: { label: "Modo dia", icon: Sun, description: "Panel claro" },
@@ -37,6 +38,7 @@ export function AdminHeader({
   menuControlId: string;
   adminUi: AppAdminUiSettings;
 }) {
+  const router = useRouter();
   const [theme, setTheme] = useState<ThemeMode>("system");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const profilePath = `/admin/equipo/${session.staffMemberId || session.profileId}`;
@@ -68,7 +70,7 @@ export function AdminHeader({
 
   async function signOut() {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin";
+    router.replace("/admin");
   }
 
   function toggle(menu: OpenMenu) {
@@ -76,21 +78,27 @@ export function AdminHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[#ead8e6] bg-white/88 px-4 py-4 shadow-sm backdrop-blur-xl transition-colors dark:border-white/15 dark:bg-[#220018]/95 sm:px-6 lg:px-8 xl:px-10">
+    <header className="sticky top-0 z-30 border-b border-[#ead8e6] bg-white/94 px-4 py-4 shadow-sm backdrop-blur-xl transition-colors dark:border-white/15 dark:bg-[#220018]/95 sm:px-6 lg:px-8 xl:px-10">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           <label
             htmlFor={menuControlId}
-            className="grid h-11 w-11 place-items-center rounded-lg border border-cocoa/25 bg-white text-ink shadow-sm transition hover:border-cocoa hover:bg-cream dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 lg:hidden"
+            className="hidden h-11 w-11 place-items-center rounded-2xl border border-cocoa/15 bg-white text-ink shadow-sm transition hover:border-cocoa hover:bg-cream dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 md:grid lg:hidden"
             aria-label="Abrir menu administrativo"
             role="button"
             tabIndex={0}
           >
             <Menu size={19} />
           </label>
-          <div className="min-w-0">
-            <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-cocoa dark:text-pink-300 sm:block">{adminUi.adminSubtitle}</p>
-            <h1 className="truncate text-lg font-black text-ink dark:text-white sm:text-xl">{adminUi.adminTitle}</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="relative size-10 shrink-0 sm:size-11">
+              <img src="/brand/ms-estudio-logo.png" alt="M&S Estudio" className="h-full w-full object-contain dark:hidden" />
+              <img src="/brand/ms-estudio-logo-negativo.png" alt="M&S Estudio" className="hidden h-full w-full object-contain dark:block" />
+            </span>
+            <span className="hidden min-w-0 sm:block">
+              <span className="block font-display text-lg font-bold leading-none text-ink dark:text-white">M&amp;S Estudio</span>
+              <span className="mt-1 block text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/65">{adminUi.adminSubtitle}</span>
+            </span>
           </div>
         </div>
 
@@ -98,19 +106,19 @@ export function AdminHeader({
           <div className="relative">
             <button
               type="button"
-              className="flex min-h-11 items-center gap-2 rounded-lg border border-cocoa/15 bg-white px-3 text-sm font-bold text-ink shadow-sm transition hover:bg-cream dark:border-white/10 dark:bg-[#210018] dark:text-white dark:hover:bg-white/10 sm:px-4"
+              className="flex min-h-11 items-center gap-2 rounded-2xl border border-cocoa/15 bg-white px-3 text-sm font-bold text-ink shadow-sm transition hover:bg-cream dark:border-white/10 dark:bg-[#210018] dark:text-white dark:hover:bg-white/10 sm:px-4"
               aria-expanded={openMenu === "theme"}
               aria-haspopup="menu"
               onClick={() => toggle("theme")}
             >
               <CurrentThemeIcon size={18} />
-              <span className="hidden sm:inline">{currentTheme.label}</span>
+              <span className="hidden md:inline">{currentTheme.label}</span>
               <ChevronDown size={16} />
             </button>
 
             {openMenu === "theme" && (
-              <Dropdown className="w-64">
-                <p className="px-2 pb-2 text-xs font-bold uppercase tracking-[0.16em] text-cocoa dark:text-pink-200">Apariencia</p>
+              <Dropdown className="right-0 w-52 p-2 sm:w-64 sm:p-3">
+                <p className="px-2 pb-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-cocoa dark:text-pink-200 sm:pb-2 sm:text-xs">Apariencia</p>
                 {(Object.keys(themeOptions) as ThemeMode[]).map((mode) => {
                   const option = themeOptions[mode];
                   const Icon = option.icon;
@@ -121,19 +129,19 @@ export function AdminHeader({
                       key={mode}
                       type="button"
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-ink transition hover:bg-cream dark:text-white dark:hover:bg-white/10",
+                        "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-ink transition hover:bg-cream dark:text-white dark:hover:bg-white/10 sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm",
                         active && "bg-cream text-cocoa dark:bg-white/10 dark:text-pink-100"
                       )}
                       onClick={() => selectTheme(mode)}
                     >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-cocoa dark:bg-white/10 dark:text-pink-100">
-                        <Icon size={17} />
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white text-cocoa dark:bg-white/10 dark:text-pink-100 sm:size-9">
+                        <Icon size={16} />
                       </span>
                       <span className="min-w-0">
                         <span className="block">{option.label}</span>
-                        <span className="block text-xs font-medium text-muted dark:text-pink-100/70">{option.description}</span>
+                        <span className="block text-[0.68rem] font-medium text-muted dark:text-pink-100/70 sm:text-xs">{option.description}</span>
                       </span>
-                      {active && <CheckCircle2 className="ml-auto shrink-0 text-cocoa dark:text-pink-200" size={17} />}
+                      {active && <CheckCircle2 className="ml-auto shrink-0 text-cocoa dark:text-pink-200" size={16} />}
                     </button>
                   );
                 })}
@@ -144,63 +152,17 @@ export function AdminHeader({
           <div className="relative">
             <button
               type="button"
-              className="relative grid size-11 place-items-center rounded-lg border border-cocoa/15 bg-white text-ink shadow-sm transition hover:bg-cream dark:border-white/15 dark:bg-white dark:text-cocoa dark:hover:bg-pink-50"
-              aria-label="Notificaciones"
-              aria-expanded={openMenu === "notifications"}
-              aria-haspopup="menu"
-              onClick={() => toggle("notifications")}
-            >
-              <Bell size={19} />
-              <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-cocoa text-[0.65rem] font-bold text-white">
-                3
-              </span>
-            </button>
-
-            {openMenu === "notifications" && (
-              <Dropdown className="w-[min(22rem,calc(100vw-2rem))]">
-                <div className="flex items-center justify-between gap-3 px-2 pb-2">
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-cocoa dark:text-pink-200">Notificaciones</p>
-                  <span className="rounded-full bg-cream px-2 py-1 text-xs font-bold text-cocoa dark:bg-white/10 dark:text-pink-100">3 nuevas</span>
-                </div>
-                <NotificationItem
-                  icon={CalendarClock}
-                  title="Revisar citas pendientes"
-                  description="Hay solicitudes que necesitan confirmacion."
-                  href="/admin/citas"
-                  onClick={() => setOpenMenu(null)}
-                />
-                <NotificationItem
-                  icon={Bell}
-                  title="Agenda actualizada"
-                  description="Verifica el calendario administrativo."
-                  href="/admin/calendario"
-                  onClick={() => setOpenMenu(null)}
-                />
-                <NotificationItem
-                  icon={Settings}
-                  title="Configuracion del sitio"
-                  description={session.role === "super_admin" ? "Puedes revisar telefono, horario e Instagram." : "Disponible para super admin."}
-                  href={session.role === "super_admin" ? "/admin/configuracion" : "/admin/dashboard"}
-                  onClick={() => setOpenMenu(null)}
-                />
-              </Dropdown>
-            )}
-          </div>
-
-          <div className="relative">
-            <button
-              type="button"
-              className="flex min-h-11 items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-cream dark:hover:bg-white/10"
+              className="flex min-h-11 items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-cream dark:hover:bg-white/10"
               aria-expanded={openMenu === "profile"}
               aria-haspopup="menu"
               onClick={() => toggle("profile")}
             >
               <ProfileAvatar avatarUrl={session.avatarUrl} username={session.username} className="h-11 w-11" />
-              <span className="hidden min-w-0 sm:block">
+              <span className="hidden min-w-0 md:block">
                 <span className="block truncate text-left text-sm font-bold text-ink dark:text-white">{session.username}</span>
                 <span className="block text-left text-xs text-muted dark:text-pink-200/80">{roleLabels[session.role]}</span>
               </span>
-              <ChevronDown className="hidden text-muted dark:text-pink-200/80 sm:block" size={17} />
+              <ChevronDown className="hidden text-muted dark:text-pink-200/80 md:block" size={17} />
             </button>
 
             {openMenu === "profile" && (
@@ -214,6 +176,9 @@ export function AdminHeader({
                 </div>
 
                 <LinkItem icon={UserRound} href={profilePath} label="Configuracion del perfil" onClick={() => setOpenMenu(null)} />
+                {session.role === "super_admin" && (
+                  <LinkItem icon={Settings} href="/admin/configuracion" label="Configuracion del sitio" onClick={() => setOpenMenu(null)} />
+                )}
 
                 <div className="my-2 border-t border-cocoa/10 dark:border-white/10" />
                 <button
@@ -271,36 +236,6 @@ function ProfileAvatar({
         initials
       )}
     </span>
-  );
-}
-
-function NotificationItem({
-  icon: Icon,
-  title,
-  description,
-  href,
-  onClick
-}: {
-  icon: typeof Bell;
-  title: string;
-  description: string;
-  href: string;
-  onClick: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex gap-3 rounded-lg px-3 py-3 text-sm transition hover:bg-cream dark:hover:bg-white/10"
-      onClick={onClick}
-    >
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-cream text-cocoa dark:bg-white/10 dark:text-pink-100">
-        <Icon size={17} />
-      </span>
-      <span className="min-w-0">
-        <span className="block font-bold text-ink dark:text-white">{title}</span>
-        <span className="mt-0.5 block text-xs leading-5 text-muted dark:text-pink-100/70">{description}</span>
-      </span>
-    </Link>
   );
 }
 

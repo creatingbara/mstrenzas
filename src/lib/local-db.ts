@@ -2,8 +2,8 @@ import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypt
 import { defaultAgendaPages } from "@/lib/agenda-page-defaults";
 import { fallbackAppointmentData, normalizeTime } from "@/lib/appointments";
 import { defaultBookingMenuItems } from "@/lib/booking-menu-defaults";
-import { generateAvailableSlots, getAppointmentEndTime } from "@/lib/booking/availability";
-import { galleryItems as seedGalleryItems, products as seedProducts, services, siteSettings } from "@/lib/data";
+import { generateAvailableSlots, getAppointmentBlockStartTime, getAppointmentEndTime } from "@/lib/booking/availability";
+import { services, siteSettings } from "@/lib/data";
 import { execute, query, queryOne, withTransaction } from "@/lib/db/pg";
 import { internalEmailForUsername, isInternalUsernameEmail, normalizeUsername, usernameFromName, validateUsername } from "@/lib/utils/username";
 import type { AppointmentBookingFormValues } from "@/lib/validations";
@@ -145,13 +145,10 @@ function ready() {
 async function seedDatabase() {
   await seedBusinessHours();
   await seedAdminProfile();
-  await seedStaffMembers();
   await ensureSiteSettingsTable();
   await seedSiteSettings();
   await seedBookingMenu();
   await seedAgendaPages();
-  await seedGalleryDefaults();
-  await seedProductDefaults();
 }
 
 async function countRows(table: string) {
@@ -197,100 +194,8 @@ async function seedAdminProfile() {
     `insert into profiles (id, username, full_name, email, phone, role, avatar_url, is_active)
      values ($1, $2, $3, $4, $5, $6, $7, $8)
      on conflict (email) do nothing`,
-    [randomUUID(), adminUsername, "Administrador M&S Trenzas", adminEmail, null, "super_admin", null, 1]
+    [randomUUID(), adminUsername, "Administrador M&S Estudio", adminEmail, null, "super_admin", null, 1]
   );
-}
-
-async function seedStaffMembers() {
-  if ((await countRows("staff_members")) > 0) return;
-
-  const mariaProfileId = randomUUID();
-  const anaProfileId = randomUUID();
-  const mariaId = randomUUID();
-  const anaId = randomUUID();
-
-  const mariaServices = ["box-braids", "knotless-braids", "trenzas-sueltas", "diseno-personalizado"];
-  const anaServices = ["trenzas-pegadas", "postura-de-extensiones", "extensiones-human-hair", "trenzas-africanas"];
-
-  await withTransaction(async (client) => {
-    await client.query(
-      `insert into profiles (id, username, full_name, email, phone, role, avatar_url, is_active)
-       values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (email) do nothing`,
-      [mariaProfileId, "maria", "Maria - M&S Trenzas", "maria@ms-trenzas.local", "8090000001", "colaborador", null, 1]
-    );
-    await client.query(
-      `insert into profiles (id, username, full_name, email, phone, role, avatar_url, is_active)
-       values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (email) do nothing`,
-      [anaProfileId, "ana", "Ana - M&S Trenzas", "ana@ms-trenzas.local", "8090000002", "colaborador", null, 1]
-    );
-
-    await client.query(
-      `insert into staff_members (id, profile_id, username, full_name, email, phone, bio, role, is_active, specialty, calendar_color)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) on conflict (id) do nothing`,
-      [
-        mariaId,
-        mariaProfileId,
-        "maria",
-        "Maria - M&S Trenzas",
-        "maria@ms-trenzas.local",
-        "8090000001",
-        "Especialista en trenzas sueltas, box braids y acabados protectores.",
-        "colaborador",
-        1,
-        "Box Braids y Knotless",
-        "#C49A5A"
-      ]
-    );
-    await client.query(
-      `insert into staff_members (id, profile_id, username, full_name, email, phone, bio, role, is_active, specialty, calendar_color)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) on conflict (id) do nothing`,
-      [
-        anaId,
-        anaProfileId,
-        "ana",
-        "Ana - M&S Trenzas",
-        "ana@ms-trenzas.local",
-        "8090000002",
-        "Especialista en trenzas pegadas, extensiones y estilos personalizados.",
-        "colaborador",
-        1,
-        "Trenzas pegadas y extensiones",
-        "#8B5E3C"
-      ]
-    );
-
-    for (const slug of mariaServices) {
-      const service = services.find((item) => item.slug === slug);
-      if (service) {
-        await client.query(
-          "insert into staff_services (staff_id, service_id, is_active, created_at) values ($1, $2, 1, now()::text) on conflict do nothing",
-          [mariaId, service.id]
-        );
-      }
-    }
-    for (const slug of anaServices) {
-      const service = services.find((item) => item.slug === slug);
-      if (service) {
-        await client.query(
-          "insert into staff_services (staff_id, service_id, is_active, created_at) values ($1, $2, 1, now()::text) on conflict do nothing",
-          [anaId, service.id]
-        );
-      }
-    }
-
-    for (let day = 0; day <= 6; day += 1) {
-      await client.query(
-        `insert into staff_business_hours (id, staff_id, day_of_week, is_active, start_time, end_time, slot_interval_minutes, buffer_minutes)
-         values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (staff_id, day_of_week) do nothing`,
-        [randomUUID(), mariaId, day, [1, 3, 5].includes(day) ? 1 : 0, "09:00", "17:00", 60, 15]
-      );
-      await client.query(
-        `insert into staff_business_hours (id, staff_id, day_of_week, is_active, start_time, end_time, slot_interval_minutes, buffer_minutes)
-         values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (staff_id, day_of_week) do nothing`,
-        [randomUUID(), anaId, day, [2, 4, 6].includes(day) ? 1 : 0, "09:00", day === 6 ? "15:00" : "17:00", 60, 15]
-      );
-    }
-  });
 }
 
 async function seedSiteSettings() {
@@ -341,27 +246,17 @@ async function ensureSiteSettingsTable() {
 }
 
 async function seedBookingMenu() {
+  if ((await countRows("booking_menu_items")) > 0) return;
+
   await withTransaction(async (client) => {
     for (const item of defaultBookingMenuItems) {
       await client.query(
         `insert into booking_menu_items (id, label, href, description, is_active, sort_order, updated_at)
          values ($1, $2, $3, $4, $5, $6, now()::text)
-         on conflict (id) do update set
-           label = excluded.label,
-           href = excluded.href,
-           description = excluded.description,
-           is_active = excluded.is_active,
-           sort_order = excluded.sort_order,
-           updated_at = now()::text`,
+         on conflict (id) do nothing`,
         [item.id, item.label, item.href, item.description ?? null, item.active ? 1 : 0, item.sortOrder]
       );
     }
-
-    await client.query(
-      `update booking_menu_items
-          set is_active = 0, updated_at = now()::text
-        where id in ('agendar-dama', 'agendar-caballero', 'catalogo-trenzas')`
-    );
   });
 }
 
@@ -385,21 +280,6 @@ async function seedAgendaPages() {
           JSON.stringify(page.serviceSlugs)
         ]
       );
-    }
-  });
-}
-
-async function seedProductDefaults() {
-  if ((await countRows("products")) > 0) return;
-
-  await withTransaction(async (client) => {
-    let index = 0;
-    for (const product of seedProducts) {
-      await client.query(
-        "insert into products (id, name, description, price, stock, image_url, active, sort_order) values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (id) do nothing",
-        [product.id, product.name, product.description, product.price ?? null, product.stock ?? null, product.imageUrl, product.active ? 1 : 0, index]
-      );
-      index += 1;
     }
   });
 }
@@ -429,24 +309,6 @@ async function ensureGalleryItemsTable() {
   await execute("alter table gallery_items add column if not exists sort_order integer not null default 0");
   await execute("alter table gallery_items add column if not exists created_at text not null default now()::text");
   await execute("alter table gallery_items add column if not exists updated_at text not null default now()::text");
-}
-
-async function seedGalleryDefaults() {
-  await ensureGalleryItemsTable();
-  if ((await countRows("gallery_items")) > 0) return;
-
-  await withTransaction(async (client) => {
-    let index = 0;
-    for (const item of seedGalleryItems) {
-      await client.query(
-        `insert into gallery_items (id, title, category, image_url, instagram_url, featured, is_active, sort_order)
-         values ($1, $2, $3, $4, $5, $6, 1, $7)
-         on conflict (id) do nothing`,
-        [item.id, item.title ?? null, item.category, item.imageUrl ?? null, item.instagramUrl ?? null, item.featured ? 1 : 0, item.sortOrder ?? index]
-      );
-      index += 1;
-    }
-  });
 }
 
 // --------------------------------------------------------------------------
@@ -944,7 +806,19 @@ export async function getStaffForService(serviceId: string) {
 }
 
 export async function getServiceBookingData(serviceId: string): Promise<ServiceBookingData> {
-  const staffMembers = await getStaffForService(serviceId);
+  const service = await getServiceById(serviceId);
+  let staffMembers = await getStaffForService(serviceId);
+
+  // Services configured for any available team member use all active staff.
+  // Add the service ID in memory so the availability filter recognizes them;
+  // no synthetic assignments are written to the database.
+  if (service?.allowAnyStaff) {
+    staffMembers = (await getStaffMembers({ activeOnly: true })).map((staff) => ({
+      ...staff,
+      services: [...new Set([...staff.services, service.id])]
+    }));
+  }
+
   const schedulesByStaff: Record<string, StaffScheduleData> = {};
 
   for (const staff of staffMembers) {
@@ -1247,15 +1121,26 @@ export async function createAppointmentBooking({
   const service = await getServiceById(serviceKey);
   if (!service) throw new Error("Servicio no encontrado.");
   if (service.active === false) throw new Error("Este servicio no está disponible.");
+  if (service.bookingEnabled === false) throw new Error("La agenda de este servicio está desactivada.");
   const staff = await getStaffMember(staffMemberId);
   if (!staff || !staff.isActive) throw new Error("Colaborador no disponible.");
-  if (!staff.services.includes(service.id)) throw new Error("Este colaborador no ofrece el servicio seleccionado.");
+  if (!staff.services.includes(service.id) && !service.allowAnyStaff) {
+    throw new Error("Este colaborador no ofrece el servicio seleccionado.");
+  }
+  if (service.requiresDeposit && values.depositPolicyAccepted !== true) {
+    throw new Error("Debes aceptar la politica de anticipo para solicitar este servicio.");
+  }
 
   const startTime = normalizeTime(selectedTime);
-  const endTime = getAppointmentEndTime(startTime, service.durationMinutes);
+  const preparationMinutes = Math.max(0, service.prepMinutes ?? 0);
+  const serviceBufferMinutes = Math.max(0, service.bufferAfterMinutes ?? 0);
+  const blockStartTime = getAppointmentBlockStartTime(startTime, preparationMinutes);
+  const endTime = getAppointmentEndTime(startTime, service.durationMinutes + serviceBufferMinutes);
   const availableSlots = generateAvailableSlots({
     date: parseDateKey(appointmentDate),
     durationMinutes: service.durationMinutes,
+    prepMinutes: preparationMinutes,
+    bufferAfterMinutes: serviceBufferMinutes,
     businessHours: await getStaffBusinessHours(staff.id),
     exceptions: await getStaffExceptions(staff.id),
     appointments: await getStaffAppointments(staff.id)
@@ -1265,47 +1150,57 @@ export async function createAppointmentBooking({
     throw new Error("Ese horario no está disponible para este colaborador. Elige otra fecha u hora.");
   }
 
-  const existing = await query<AppointmentBookingRow>(
-    `select * from appointment_bookings
-      where appointment_date = $1
-        and staff_member_id = $2
-        and status in ('pendiente', 'confirmada')
-        and start_time < $3
-        and end_time > $4`,
-    [appointmentDate, staff.id, endTime, startTime]
-  );
+  // La verificación de solapamiento y la inserción corren en una misma
+  // transacción serializada con un advisory lock por colaborador+fecha:
+  // dos requests simultáneos por el mismo horario no pueden insertarse ambos.
+  const row = await withTransaction(async (client) => {
+    await client.query("select pg_advisory_xact_lock(hashtext($1))", [`booking:${staff.id}:${appointmentDate}`]);
 
-  if (existing.length > 0) {
-    throw new Error("Ese horario ya fue reservado. Elige otra hora disponible.");
-  }
+    const existing = await client.query(
+      `select 1 from appointment_bookings
+        where appointment_date = $1
+          and staff_member_id = $2
+          and status in ('pendiente', 'confirmada')
+          and start_time < $3
+          and end_time > $4
+        limit 1`,
+      [appointmentDate, staff.id, endTime, blockStartTime]
+    );
 
-  const row = await queryOne<AppointmentBookingRow>(
-    `insert into appointment_bookings (
-        id, service_id, staff_member_id, staff_name, service_name, client_name, phone, instagram, email,
-        appointment_date, start_time, end_time, duration_minutes, status, notes, reference_image_url
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pendiente', $14, $15)
-      returning *`,
-    [
-      randomUUID(),
-      service.id,
-      staff.id,
-      staff.fullName,
-      service.name,
-      values.fullName,
-      values.whatsapp,
-      values.instagram || null,
-      values.email || null,
-      appointmentDate,
-      startTime,
-      endTime,
-      service.durationMinutes,
-      values.note || null,
-      values.referenceImageUrl || null
-    ]
-  );
+    if (existing.rows.length > 0) {
+      throw new Error("Ese horario ya fue reservado. Elige otra hora disponible.");
+    }
 
-  return mapAppointmentBooking(row as AppointmentBookingRow);
+    const inserted = await client.query<AppointmentBookingRow>(
+      `insert into appointment_bookings (
+          id, service_id, staff_member_id, staff_name, service_name, client_name, phone, instagram, email,
+          appointment_date, start_time, end_time, duration_minutes, status, notes, reference_image_url
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pendiente', $14, $15)
+        returning *`,
+      [
+        randomUUID(),
+        service.id,
+        staff.id,
+        staff.fullName,
+        service.name,
+        values.fullName,
+        values.whatsapp,
+        values.instagram || null,
+        values.email || null,
+        appointmentDate,
+        startTime,
+        endTime,
+        service.durationMinutes,
+        values.note || null,
+        values.referenceImageUrl || null
+      ]
+    );
+
+    return inserted.rows[0];
+  });
+
+  return mapAppointmentBooking(row);
 }
 
 function parseDateKey(dateKey: string) {
@@ -1473,19 +1368,27 @@ function mapGalleryItem(row: GalleryItemRow): GalleryItem {
 
 export async function getGalleryItems({
   activeOnly = false,
-  featuredOnly = false
+  featuredOnly = false,
+  category
 }: {
   activeOnly?: boolean;
   featuredOnly?: boolean;
+  category?: string;
 } = {}): Promise<GalleryItem[]> {
   await ready();
 
   const filters: string[] = [];
+  const params: unknown[] = [];
   if (activeOnly) filters.push("is_active = 1");
   if (featuredOnly) filters.push("featured = 1");
+  if (category?.trim()) {
+    params.push(category.trim());
+    filters.push(`category = $${params.length}`);
+  }
 
   const rows = await query<GalleryItemRow>(
-    `select * from gallery_items${filters.length ? ` where ${filters.join(" and ")}` : ""} order by sort_order, created_at`
+    `select * from gallery_items${filters.length ? ` where ${filters.join(" and ")}` : ""} order by sort_order, created_at`,
+    params
   );
   return rows.map(mapGalleryItem);
 }
@@ -1596,9 +1499,12 @@ type AgendaPageRow = {
   service_slugs_json: string | null;
 };
 
-function mapAgendaPage(row: AgendaPageRow): AgendaPageContent {
+function mapAgendaPage(row: AgendaPageRow, availableServiceSlugs?: Set<string>): AgendaPageContent {
   const fallback = defaultAgendaPages.find((page) => page.pageKey === row.page_key);
-  const serviceSlugs = parseJsonList(row.service_slugs_json, []);
+  const storedServiceSlugs = parseJsonList(row.service_slugs_json, []);
+  const serviceSlugs = availableServiceSlugs
+    ? storedServiceSlugs.filter((slug) => availableServiceSlugs.has(slug))
+    : storedServiceSlugs;
 
   return {
     pageKey: row.page_key,
@@ -1631,7 +1537,9 @@ function parseAgendaSections(value: string) {
 export async function getAgendaPages() {
   await ready();
   const rows = await query<AgendaPageRow>("select * from agenda_pages order by page_key");
-  return rows.map(mapAgendaPage);
+  const currentServices = await getServices();
+  const availableServiceSlugs = new Set(currentServices.map((service) => service.slug));
+  return rows.map((row) => mapAgendaPage(row, availableServiceSlugs));
 }
 
 export async function getAgendaPage(pageKey: string): Promise<AgendaPageContent> {
@@ -1769,25 +1677,25 @@ function mergeServiceWithOverride(base: Service, override?: ServiceOverrideRow):
   if (!override) {
     return {
       ...base,
-      fullDescription: base.description,
-      galleryImages: [],
-      priceLabel: null,
-      durationLabel: null,
-      bookingEnabled: true,
-      whatsappEnabled: true,
-      showStaffSelector: true,
-      allowAnyStaff: true,
-      requiresDeposit: false,
-      depositAmount: null,
-      showOnHome: base.featured ?? true,
-      sortOrder: Number(base.id) || 0,
-      internalNotes: null,
-      beforeCare: null,
-      afterCare: null,
-      whatsappMessage: null,
-      prepMinutes: null,
-      bufferAfterMinutes: null,
-      source: "base"
+      fullDescription: base.fullDescription ?? base.description,
+      galleryImages: base.galleryImages ?? [],
+      priceLabel: base.priceLabel ?? null,
+      durationLabel: base.durationLabel ?? null,
+      bookingEnabled: base.bookingEnabled !== false,
+      whatsappEnabled: base.whatsappEnabled !== false,
+      showStaffSelector: base.showStaffSelector !== false,
+      allowAnyStaff: base.allowAnyStaff !== false,
+      requiresDeposit: Boolean(base.requiresDeposit),
+      depositAmount: base.depositAmount ?? null,
+      showOnHome: base.showOnHome ?? base.featured ?? true,
+      sortOrder: base.sortOrder ?? (Number(base.id) || 0),
+      internalNotes: base.internalNotes ?? null,
+      beforeCare: base.beforeCare ?? null,
+      afterCare: base.afterCare ?? null,
+      whatsappMessage: base.whatsappMessage ?? null,
+      prepMinutes: base.prepMinutes ?? null,
+      bufferAfterMinutes: base.bufferAfterMinutes ?? null,
+      source: base.source ?? "base"
     };
   }
 
@@ -2143,7 +2051,7 @@ export async function createCustomService(input: ServiceOverridePatch): Promise<
       input.description?.trim() || "Describe este servicio.",
       input.fullDescription?.trim() || null,
       input.category?.trim() || "Servicios",
-      input.imageUrl?.trim() || "/services/trenzas-africanas.jpg",
+      input.imageUrl?.trim() || "",
       JSON.stringify(input.galleryImages ?? []),
       input.priceFrom ?? null,
       input.priceTo ?? null,

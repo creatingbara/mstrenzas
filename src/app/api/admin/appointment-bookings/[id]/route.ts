@@ -3,13 +3,12 @@ import { getAdminSession } from "@/lib/admin-auth";
 import { requireCriticalPasskey } from "@/lib/auth/critical-passkey";
 import { canViewAppointment } from "@/lib/auth/require-auth";
 import { hasPermission } from "@/lib/auth/permissions";
+import { appointmentStatuses } from "@/lib/appointment-status";
 import { deleteAppointmentBooking, getAdminAppointmentById, updateAppointmentStatus } from "@/lib/local-db";
 import { notifyAppointmentConfirmed } from "@/lib/push-notifications";
 import type { AppointmentStatus } from "@/types/appointment";
 
 export const runtime = "nodejs";
-
-const statuses: AppointmentStatus[] = ["pendiente", "confirmada", "cancelada", "completada", "no_asistio"];
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession();
@@ -20,7 +19,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   const body = (await request.json()) as { status?: AppointmentStatus };
 
-  if (!body.status || !statuses.includes(body.status)) {
+  if (!body.status || !appointmentStatuses.includes(body.status)) {
     return NextResponse.json({ error: "Estado inválido." }, { status: 400 });
   }
 

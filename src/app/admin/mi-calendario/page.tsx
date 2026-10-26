@@ -5,7 +5,7 @@ import { getAdminAppointmentData } from "@/lib/admin-appointments";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const metadata = {
-  title: "Mi calendario | Panel M&S Trenzas"
+  title: "Mi calendario | Panel M&S Estudio"
 };
 
 export default async function MyCalendarPage() {

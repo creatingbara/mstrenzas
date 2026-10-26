@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { CriticalPasskeyGate } from "@/components/admin/CriticalPasskeyGate";
 import type { AdminSession } from "@/lib/auth/admin-session";
@@ -18,7 +19,7 @@ export function AdminShell({
   const menuControlId = "admin-mobile-menu";
 
   return (
-    <section className="min-h-screen bg-[#fff7fc] transition-colors dark:bg-[#13000f]">
+    <section className="min-h-screen bg-[#f8f4f8] transition-colors dark:bg-[#13000f] lg:bg-[#fff7fc]">
       <CriticalPasskeyGate session={session} />
       <input id={menuControlId} type="checkbox" className="peer sr-only" aria-hidden="true" />
       <div className="fixed inset-0 z-50 hidden peer-checked:block lg:hidden">
@@ -34,9 +35,10 @@ export function AdminShell({
 
         <div className="min-w-0 overflow-x-hidden">
           <AdminHeader session={session} menuControlId={menuControlId} adminUi={adminUi} />
-          <main className="admin-scope min-w-0 px-4 py-7 sm:px-6 lg:px-8 xl:px-10">
-            <div className="mx-auto grid w-full max-w-[1460px] min-w-0 gap-6 has-[.admin-full-width]:max-w-none">{children}</div>
+          <main className="admin-scope min-w-0 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:pb-8 lg:pt-7 xl:px-10">
+            <div className="mx-auto grid w-full max-w-[1460px] min-w-0 gap-5 lg:gap-6 has-[.admin-full-width]:max-w-none">{children}</div>
           </main>
+          <AdminMobileNav session={session} />
         </div>
       </div>
     </section>

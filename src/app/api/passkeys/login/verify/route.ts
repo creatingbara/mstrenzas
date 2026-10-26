@@ -12,6 +12,7 @@ import {
   updatePasskeyCounter
 } from "@/lib/auth/passkeys";
 import { getProfileById, getStaffMemberByProfileId } from "@/lib/local-db";
+import { requireAdminOrigin } from "@/lib/security/origin-guard";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,9 @@ type LoginVerifyPayload = {
 };
 
 export async function POST(request: Request) {
+  const originError = requireAdminOrigin(request);
+  if (originError) return originError;
+
   const cookieStore = await cookies();
   const challenge = readChallengeCookie(cookieStore.get(PASSKEY_CHALLENGE_COOKIE)?.value);
   if (challenge?.action !== "login" || !challenge.profileId) {

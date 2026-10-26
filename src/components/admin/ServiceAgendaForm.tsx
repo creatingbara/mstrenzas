@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ServiceImageUploader } from "@/components/admin/ServiceImageUploader";
 import { ServicePreviewCard } from "@/components/admin/ServicePreviewCard";
@@ -72,7 +73,7 @@ export function ServiceAgendaForm({
     priceLabel: service?.priceLabel ?? "",
     durationMinutes: String(service?.durationMinutes ?? 120),
     durationLabel: service?.durationLabel ?? "",
-    requiresQuote: service?.requiresQuote ?? true,
+    requiresQuote: service?.requiresQuote ?? false,
     requiresDeposit: Boolean(service?.requiresDeposit),
     depositAmount: service?.depositAmount?.toString() ?? "",
     bookingEnabled: service?.bookingEnabled !== false,
@@ -137,13 +138,20 @@ export function ServiceAgendaForm({
     setSaving(true);
     setStatus(null);
 
+    const imageUrl = form.imageUrl.trim();
+    if (!imageUrl) {
+      setStatus({ type: "error", message: "Agrega una imagen o sube una foto antes de guardar el servicio." });
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       slug: form.slug || slugify(form.name),
       name: form.name,
       category: form.category,
       description: form.description,
       fullDescription: form.fullDescription || null,
-      imageUrl: form.imageUrl || "/services/trenzas-africanas.jpg",
+      imageUrl,
       galleryImages: listFromText(form.galleryImages),
       active: form.active,
       featured: form.featured,
@@ -181,11 +189,15 @@ export function ServiceAgendaForm({
       const result = (await response.json()) as ServiceResponse;
       if (!response.ok || !result.item) throw new Error(result.error || "No se pudo guardar el servicio.");
 
-      await fetch(`/api/admin/servicios/${result.item.id}/staff`, {
+      const staffResponse = await fetch(`/api/admin/servicios/${result.item.id}/staff`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ staffIds: selectedStaffIds })
       });
+      const staffResult = (await staffResponse.json()) as { error?: string };
+      if (!staffResponse.ok) {
+        throw new Error(staffResult.error || "El servicio se guardó, pero no se pudo actualizar el equipo asignado.");
+      }
 
       setStatus({ type: "ok", message: result.message || "Servicio guardado." });
       if (mode === "create") router.push(`/admin/servicios-agenda/${result.item.id}`);
@@ -206,68 +218,99 @@ export function ServiceAgendaForm({
           </p>
         )}
 
-        <Section title="Informacion basica">
+        <Section title="Información básica">
           <div className="grid gap-4 md:grid-cols-2">
-            <Input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Nombre del servicio" />
-            <Input value={form.slug} onChange={(event) => update("slug", slugify(event.target.value))} placeholder="slug-del-servicio" />
-            <Input value={form.category} onChange={(event) => update("category", event.target.value)} placeholder="Categoria" />
-            <Input value={form.sortOrder} onChange={(event) => update("sortOrder", event.target.value)} type="number" placeholder="Orden" />
+            <Input aria-label="Nombre del servicio" value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Nombre del servicio" />
+            <Input aria-label="Categoría" value={form.category} onChange={(event) => update("category", event.target.value)} placeholder="Categoría" />
           </div>
-          <Textarea className="mt-4" value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Descripcion corta" />
-          <Textarea className="mt-4" value={form.fullDescription} onChange={(event) => update("fullDescription", event.target.value)} placeholder="Descripcion completa" />
+          <Textarea className="mt-4" aria-label="Descripción breve" value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Descripción breve (opcional)" />
           <div className="mt-4">
             <ServiceImageUploader value={form.imageUrl} onChange={(value) => update("imageUrl", value)} />
           </div>
-          <Textarea className="mt-4" value={form.galleryImages} onChange={(event) => update("galleryImages", event.target.value)} placeholder="Galeria opcional, una imagen por linea" />
           <CheckboxGrid>
             <Check label="Servicio activo" checked={form.active} onChange={(value) => update("active", value)} />
             <Check label="Mostrar en home" checked={form.showOnHome} onChange={(value) => update("showOnHome", value)} />
             <Check label="Destacado" checked={form.featured} onChange={(value) => update("featured", value)} />
           </CheckboxGrid>
+          <details className="mt-4 rounded-lg border border-cocoa/10 px-4 py-3">
+            <summary className="cursor-pointer text-sm font-semibold text-cocoa">Opciones adicionales de contenido</summary>
+            <div className="mt-4 grid gap-4">
+              <Input aria-label="Dirección web del servicio" value={form.slug} onChange={(event) => update("slug", slugify(event.target.value))} placeholder="URL del servicio (se genera a partir del nombre)" />
+              <Input aria-label="Orden en el catálogo" value={form.sortOrder} onChange={(event) => update("sortOrder", event.target.value)} type="number" placeholder="Orden en el catálogo" />
+              <Textarea aria-label="Descripción completa" value={form.fullDescription} onChange={(event) => update("fullDescription", event.target.value)} placeholder="Descripción completa (opcional)" />
+              <Textarea aria-label="Fotos adicionales" value={form.galleryImages} onChange={(event) => update("galleryImages", event.target.value)} placeholder="Fotos adicionales: un enlace por línea (opcional)" />
+            </div>
+          </details>
         </Section>
 
-        <Section title="Precio y duracion">
+        <Section title="Precio y duración">
           <div className="grid gap-4 md:grid-cols-2">
-            <Input value={form.priceFrom} onChange={(event) => update("priceFrom", event.target.value)} type="number" placeholder="Precio desde" />
-            <Input value={form.priceTo} onChange={(event) => update("priceTo", event.target.value)} type="number" placeholder="Precio hasta" />
-            <Input value={form.priceLabel} onChange={(event) => update("priceLabel", event.target.value)} placeholder="Texto visible de precio" />
-            <Input value={form.durationMinutes} onChange={(event) => update("durationMinutes", event.target.value)} type="number" placeholder="Duracion en minutos" />
-            <Input value={form.durationLabel} onChange={(event) => update("durationLabel", event.target.value)} placeholder="Duracion visible, ej. 3 h" />
-            <Input value={form.depositAmount} onChange={(event) => update("depositAmount", event.target.value)} type="number" placeholder="Monto de deposito" />
+            <Input aria-label="Precio en pesos dominicanos" value={form.priceFrom} onChange={(event) => update("priceFrom", event.target.value)} type="number" min="0" disabled={form.requiresQuote} placeholder="Precio en RD$" />
+            <Input aria-label="Duración en minutos" value={form.durationMinutes} onChange={(event) => update("durationMinutes", event.target.value)} type="number" min="1" placeholder="Duración en minutos" />
           </div>
           <CheckboxGrid>
-            <Check label="Requiere cotizacion" checked={form.requiresQuote} onChange={(value) => update("requiresQuote", value)} />
-            <Check label="Requiere deposito" checked={form.requiresDeposit} onChange={(value) => update("requiresDeposit", value)} />
+            <Check label="Mostrar precio como “Cotizar”" checked={form.requiresQuote} onChange={(value) => update("requiresQuote", value)} />
+            <Check label="Solicitar depósito" checked={form.requiresDeposit} onChange={(value) => update("requiresDeposit", value)} />
           </CheckboxGrid>
+          <details className="mt-4 rounded-lg border border-cocoa/10 px-4 py-3">
+            <summary className="cursor-pointer text-sm font-semibold text-cocoa">Precio por rango y etiquetas visibles</summary>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <Input aria-label="Precio máximo" value={form.priceTo} onChange={(event) => update("priceTo", event.target.value)} type="number" min="0" disabled={form.requiresQuote} placeholder="Precio máximo (opcional)" />
+              <Input aria-label="Etiqueta de precio" value={form.priceLabel} onChange={(event) => update("priceLabel", event.target.value)} placeholder="Texto de precio (opcional)" />
+              <Input aria-label="Etiqueta de duración" value={form.durationLabel} onChange={(event) => update("durationLabel", event.target.value)} placeholder="Duración visible, por ejemplo 3 h" />
+              <Input aria-label="Monto del depósito" value={form.depositAmount} onChange={(event) => update("depositAmount", event.target.value)} type="number" min="0" disabled={!form.requiresDeposit} placeholder="Monto del depósito" />
+            </div>
+          </details>
         </Section>
 
         <Section title="Agenda">
           <CheckboxGrid>
             <Check label="Permitir agendar" checked={form.bookingEnabled} onChange={(value) => update("bookingEnabled", value)} />
-            <Check label="Cualquier colaborador disponible" checked={form.allowAnyStaff} onChange={(value) => update("allowAnyStaff", value)} />
-            <Check label="Mostrar selector de colaborador" checked={form.showStaffSelector} onChange={(value) => update("showStaffSelector", value)} />
-            <Check label="Permitir WhatsApp alternativo" checked={form.whatsappEnabled} onChange={(value) => update("whatsappEnabled", value)} />
+            <Check label="Cualquier colaboradora activa" checked={form.allowAnyStaff} onChange={(value) => update("allowAnyStaff", value)} />
           </CheckboxGrid>
-          <Textarea className="mt-4" value={form.whatsappMessage} onChange={(event) => update("whatsappMessage", event.target.value)} placeholder="Mensaje personalizado de WhatsApp" />
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Input value={form.prepMinutes} onChange={(event) => update("prepMinutes", event.target.value)} type="number" placeholder="Preparacion antes, minutos" />
-            <Input value={form.bufferAfterMinutes} onChange={(event) => update("bufferAfterMinutes", event.target.value)} type="number" placeholder="Descanso despues, minutos" />
-          </div>
+          <p className="mt-3 text-sm leading-6 text-muted">Al activar esta opción, cualquier integrante activo con horario configurado podrá atender este servicio.</p>
+          <details className="mt-4 rounded-lg border border-cocoa/10 px-4 py-3">
+            <summary className="cursor-pointer text-sm font-semibold text-cocoa">Más opciones de agenda</summary>
+            <div className="mt-4 grid gap-4">
+              <CheckboxGrid>
+                <Check label="Mostrar selector de colaborador" checked={form.showStaffSelector} onChange={(value) => update("showStaffSelector", value)} />
+                <Check label="Permitir WhatsApp alternativo" checked={form.whatsappEnabled} onChange={(value) => update("whatsappEnabled", value)} />
+              </CheckboxGrid>
+              <Textarea aria-label="Mensaje para WhatsApp" value={form.whatsappMessage} onChange={(event) => update("whatsappMessage", event.target.value)} placeholder="Mensaje personalizado para WhatsApp (opcional)" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input aria-label="Preparación antes del servicio en minutos" value={form.prepMinutes} onChange={(event) => update("prepMinutes", event.target.value)} type="number" min="0" placeholder="Preparación antes, minutos" />
+                <Input aria-label="Descanso después del servicio en minutos" value={form.bufferAfterMinutes} onChange={(event) => update("bufferAfterMinutes", event.target.value)} type="number" min="0" placeholder="Descanso después, minutos" />
+              </div>
+            </div>
+          </details>
         </Section>
 
-        <Section title="Colaboradores">
-          <ServiceStaffSelector staffMembers={staffMembers} selectedIds={selectedStaffIds} onChange={setSelectedStaffIds} />
+        <Section title="Colaboradoras">
+          {form.allowAnyStaff ? (
+            staffMembers.length ? (
+              <p className="text-sm leading-6 text-muted">No necesitas asignar personas. Este servicio estará disponible para las {staffMembers.length} colaboradoras activas del equipo.</p>
+            ) : (
+              <p className="text-sm leading-6 text-muted">No hay colaboradoras activas todavía. <Link href="/admin/equipo/nuevo" className="font-semibold text-cocoa underline">Agrega una persona al equipo</Link> para que pueda recibir citas.</p>
+            )
+          ) : (
+            <ServiceStaffSelector staffMembers={staffMembers} selectedIds={selectedStaffIds} onChange={setSelectedStaffIds} />
+          )}
         </Section>
 
-        <Section title="Contenido adicional">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Textarea value={form.includes} onChange={(event) => update("includes", event.target.value)} placeholder="Que incluye, una linea por punto" />
-            <Textarea value={form.excludes} onChange={(event) => update("excludes", event.target.value)} placeholder="Que no incluye, una linea por punto" />
-            <Textarea value={form.recommendations} onChange={(event) => update("recommendations", event.target.value)} placeholder="Recomendaciones, una linea por punto" />
-          </div>
-          <Textarea className="mt-4" value={form.beforeCare} onChange={(event) => update("beforeCare", event.target.value)} placeholder="Cuidados antes del servicio" />
-          <Textarea className="mt-4" value={form.afterCare} onChange={(event) => update("afterCare", event.target.value)} placeholder="Cuidados despues del servicio" />
-          <Textarea className="mt-4" value={form.internalNotes} onChange={(event) => update("internalNotes", event.target.value)} placeholder="Notas internas para admin" />
+        <Section title="Información opcional">
+          <details className="rounded-lg border border-cocoa/10 px-4 py-3">
+            <summary className="cursor-pointer text-sm font-semibold text-cocoa">Qué incluye, recomendaciones y cuidados</summary>
+            <div className="mt-4 grid gap-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Textarea aria-label="Qué incluye" value={form.includes} onChange={(event) => update("includes", event.target.value)} placeholder="Qué incluye, un punto por línea" />
+                <Textarea aria-label="Qué no incluye" value={form.excludes} onChange={(event) => update("excludes", event.target.value)} placeholder="Qué no incluye, un punto por línea" />
+                <Textarea aria-label="Recomendaciones" value={form.recommendations} onChange={(event) => update("recommendations", event.target.value)} placeholder="Recomendaciones, un punto por línea" />
+              </div>
+              <Textarea aria-label="Cuidados antes del servicio" value={form.beforeCare} onChange={(event) => update("beforeCare", event.target.value)} placeholder="Cuidados antes del servicio" />
+              <Textarea aria-label="Cuidados después del servicio" value={form.afterCare} onChange={(event) => update("afterCare", event.target.value)} placeholder="Cuidados después del servicio" />
+              <Textarea aria-label="Notas internas" value={form.internalNotes} onChange={(event) => update("internalNotes", event.target.value)} placeholder="Notas internas para administración" />
+            </div>
+          </details>
         </Section>
 
         <div className="flex flex-wrap gap-3">

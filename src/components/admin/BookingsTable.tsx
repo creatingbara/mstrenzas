@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { appointmentStatuses, getAppointmentPrimaryAction, isActiveAppointmentForBookings } from "@/lib/appointment-status";
 import type { AppointmentBooking, AppointmentStatus } from "@/types/appointment";
 
-const statuses: AppointmentStatus[] = ["pendiente", "confirmada", "cancelada", "completada", "no_asistio"];
+const statuses = appointmentStatuses.filter((status) => status !== "archivada");
 
 export function BookingsTable({ appointments }: { appointments: AppointmentBooking[] }) {
-  const [items, setItems] = useState(appointments);
+  const [items, setItems] = useState(appointments.filter(isActiveAppointmentForBookings));
   const [notice, setNotice] = useState<string | null>(null);
 
   async function updateStatus(id: string, status: AppointmentStatus) {
@@ -24,7 +25,13 @@ export function BookingsTable({ appointments }: { appointments: AppointmentBooki
 
       if (!response.ok) throw new Error(result.error || "No se pudo actualizar la cita.");
       if (result.item) {
-        setItems((current) => current.map((item) => (item.id === id ? result.item as AppointmentBooking : item)));
+        setItems((current) => {
+          const nextItem = result.item as AppointmentBooking;
+          if (!isActiveAppointmentForBookings(nextItem)) {
+            return current.filter((item) => item.id !== id);
+          }
+          return current.map((item) => (item.id === id ? nextItem : item));
+        });
       }
       setNotice("Estado actualizado.");
     } catch (error) {
@@ -55,26 +62,29 @@ export function BookingsTable({ appointments }: { appointments: AppointmentBooki
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="grid min-w-0 gap-3">
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
       <div className="grid gap-3 md:hidden">
-        {items.map((booking) => (
-          <article key={booking.id} className="rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
+        {items.map((booking) => {
+          const primaryAction = getAppointmentPrimaryAction(booking.status);
+
+          return (
+          <article key={booking.id} className="min-w-0 overflow-hidden rounded-[1.15rem] border border-cocoa/10 bg-white p-4 shadow-sm">
+            <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-lg font-black text-ink">{booking.clientName}</p>
                 <p className="mt-1 text-sm font-semibold text-cocoa">{booking.appointmentDate} - {booking.startTime}</p>
               </div>
-              <span className="shrink-0 rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">{booking.status}</span>
+              <span className="max-w-[38%] shrink-0 truncate rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa">{booking.status}</span>
             </div>
             <div className="mt-3 grid gap-1 text-sm text-muted">
-              <p><span className="font-semibold text-ink">Servicio:</span> {booking.serviceName}</p>
-              <p><span className="font-semibold text-ink">Colaborador:</span> {booking.staffName || "Sin asignar"}</p>
-              <p><span className="font-semibold text-ink">WhatsApp:</span> {booking.phone}</p>
-              <p><span className="font-semibold text-ink">Instagram:</span> {booking.instagram || "No indicado"}</p>
+              <p className="truncate"><span className="font-semibold text-ink">Servicio:</span> {booking.serviceName}</p>
+              <p className="truncate"><span className="font-semibold text-ink">Colaborador:</span> {booking.staffName || "Sin asignar"}</p>
+              <p className="truncate"><span className="font-semibold text-ink">WhatsApp:</span> {booking.phone}</p>
+              <p className="truncate"><span className="font-semibold text-ink">Instagram:</span> {booking.instagram || "No indicado"}</p>
             </div>
             <select
-              className="mt-4 min-h-11 w-full rounded-lg border border-cocoa/20 bg-white px-3"
+              className="mt-4 min-h-11 w-full min-w-0 rounded-lg border border-cocoa/20 bg-white px-3 text-sm font-semibold"
               value={booking.status}
               onChange={(event) => updateStatus(booking.id, event.target.value as AppointmentStatus)}
             >
@@ -84,20 +94,28 @@ export function BookingsTable({ appointments }: { appointments: AppointmentBooki
                 </option>
               ))}
             </select>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <Button type="button" variant="outline" onClick={() => updateStatus(booking.id, "confirmada")}>Confirmar</Button>
-              <Button type="button" variant="ghost" onClick={() => updateStatus(booking.id, "cancelada")}>Cancelar</Button>
-              {booking.status === "cancelada" && (
-                <Button type="button" variant="ghost" onClick={() => deleteBooking(booking)}>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {primaryAction ? (
+                <Button type="button" variant="outline" className="min-w-0 rounded-lg px-2 text-sm" onClick={() => updateStatus(booking.id, primaryAction.nextStatus)}>
+                  {primaryAction.label}
+                </Button>
+              ) : (
+                <span aria-hidden="true" />
+              )}
+              {booking.status === "cancelada" ? (
+                <Button type="button" variant="outline" className="min-w-0 rounded-lg px-2 text-sm text-rose-700" onClick={() => deleteBooking(booking)}>
                   Eliminar
                 </Button>
+              ) : (
+                <Button type="button" variant="outline" className="min-w-0 rounded-lg px-2 text-sm" onClick={() => updateStatus(booking.id, "cancelada")}>Cancelar</Button>
               )}
-              <Link href={`/admin/citas/${booking.id}`} className="contents">
-                <Button type="button" variant="ghost">Ver</Button>
+              <Link href={`/admin/citas/${booking.id}`} className="col-span-2 mx-auto w-[min(17rem,92%)]">
+                <Button type="button" variant="outline" className="w-full min-w-0 rounded-lg px-2 text-sm">Ver los detalles de cita</Button>
               </Link>
             </div>
           </article>
-        ))}
+          );
+        })}
         {!items.length && <p className="rounded-lg bg-white p-4 text-sm text-muted shadow-sm">No hay citas registradas.</p>}
       </div>
       <div className="hidden overflow-x-auto rounded-lg border border-cocoa/10 bg-white md:block">
@@ -115,7 +133,10 @@ export function BookingsTable({ appointments }: { appointments: AppointmentBooki
             </tr>
           </thead>
           <tbody>
-            {items.map((booking) => (
+            {items.map((booking) => {
+              const primaryAction = getAppointmentPrimaryAction(booking.status);
+
+              return (
               <tr key={booking.id} className="border-t border-cocoa/10">
                 <td className="p-4 font-semibold">{booking.clientName}</td>
                 <td className="p-4">{booking.phone}</td>
@@ -137,19 +158,23 @@ export function BookingsTable({ appointments }: { appointments: AppointmentBooki
                   </select>
                 </td>
                 <td className="flex gap-2 p-4">
-                  <Button type="button" variant="outline" onClick={() => updateStatus(booking.id, "confirmada")}>Confirmar</Button>
-                  <Button type="button" variant="ghost" onClick={() => updateStatus(booking.id, "cancelada")}>Cancelar</Button>
-                  {booking.status === "cancelada" && (
-                    <Button type="button" variant="ghost" onClick={() => deleteBooking(booking)}>
+                  {primaryAction && (
+                    <Button type="button" variant="outline" onClick={() => updateStatus(booking.id, primaryAction.nextStatus)}>{primaryAction.label}</Button>
+                  )}
+                  {booking.status === "cancelada" ? (
+                    <Button type="button" variant="outline" className="text-rose-700" onClick={() => deleteBooking(booking)}>
                       Eliminar
                     </Button>
+                  ) : (
+                    <Button type="button" variant="ghost" onClick={() => updateStatus(booking.id, "cancelada")}>Cancelar</Button>
                   )}
                   <Link href={`/admin/citas/${booking.id}`}>
-                    <Button type="button" variant="ghost">Ver</Button>
+                    <Button type="button" variant="ghost">Ver los detalles de cita</Button>
                   </Link>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         {!items.length && <p className="p-4 text-sm text-muted">No hay citas registradas.</p>}

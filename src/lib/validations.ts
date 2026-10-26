@@ -26,11 +26,26 @@ export const appointmentBookingSchema = z.object({
   instagram: z.string().optional(),
   email: z.string().email("Escribe un correo valido.").optional().or(z.literal("")),
   referenceImageUrl: httpsUrl,
-  note: z.string().max(700, "La nota es muy larga.").optional(),
+  note: z
+    .string()
+    .trim()
+    .min(10, "Cuéntanos al menos el color, largo o estilo que deseas.")
+    .max(700, "La nota es muy larga."),
+  depositPolicyAccepted: z.boolean().optional(),
   website: z.string().max(0, "Solicitud no valida.").optional()
 });
 
 export type AppointmentBookingFormValues = z.infer<typeof appointmentBookingSchema>;
+
+export const appointmentBookingRequestSchema = z.object({
+  serviceKey: z.string().min(1).max(120),
+  staffMemberId: z.string().min(1).max(120),
+  appointmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "La fecha no es válida."),
+  selectedTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, "La hora no es válida."),
+  form: appointmentBookingSchema
+});
+
+export type AppointmentBookingRequestValues = z.infer<typeof appointmentBookingRequestSchema>;
 
 export const siteSettingsSchema = z.object({
   whatsapp: z.string().max(40, "WhatsApp demasiado largo.").default(""),

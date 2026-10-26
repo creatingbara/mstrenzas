@@ -1,5 +1,13 @@
-import { beforeBookingItems } from "@/lib/data";
+import { beforeBookingItems, services } from "@/lib/data";
 import type { AgendaPageContent } from "@/types/agenda-page";
+
+const serviceSlugsForAudience = (audience: "dama" | "caballero") =>
+  services
+    .filter((service) => {
+      const isMenService = service.category.toLowerCase().includes("caballero");
+      return audience === "caballero" ? isMenService : !isMenService;
+    })
+    .map((service) => service.slug);
 
 export const defaultAgendaPages: AgendaPageContent[] = [
   {
@@ -11,15 +19,7 @@ export const defaultAgendaPages: AgendaPageContent[] = [
     buttonHref: null,
     sections: [],
     items: [],
-    serviceSlugs: [
-      "trenzas-africanas",
-      "box-braids",
-      "knotless-braids",
-      "trenzas-sueltas",
-      "trenzas-pegadas",
-      "diseno-personalizado",
-      "postura-de-extensiones"
-    ]
+    serviceSlugs: serviceSlugsForAudience("dama")
   },
   {
     pageKey: "caballero",
@@ -30,7 +30,7 @@ export const defaultAgendaPages: AgendaPageContent[] = [
     buttonHref: null,
     sections: [],
     items: [],
-    serviceSlugs: ["trenzas-pegadas", "diseno-personalizado"]
+    serviceSlugs: serviceSlugsForAudience("caballero")
   },
   {
     pageKey: "extensiones-humanas",
@@ -38,7 +38,7 @@ export const defaultAgendaPages: AgendaPageContent[] = [
     title: "Extensiones 100% Human Hair",
     subtitle: "Extensiones humanas de alta calidad para un resultado natural, elegante y duradero.",
     buttonLabel: "Cotizar extensiones por WhatsApp",
-    buttonHref: "whatsapp:Hola M&S Trenzas, quiero cotizar extensiones 100% Human Hair.",
+    buttonHref: "whatsapp:Hola M&S Estudio, quiero cotizar extensiones 100% Human Hair.",
     sections: [
       {
         title: "Qué son las extensiones 100% Human Hair",

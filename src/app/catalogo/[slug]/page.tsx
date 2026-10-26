@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [service, settings] = await Promise.all([getServiceById(slug), getSiteSettings()]);
-  if (!service) notFound();
+  if (!service || service.active === false) notFound();
 
-  const message = `Hola M&S Trenzas, quiero agendar o cotizar: ${service.name}.`;
+  const message = service.whatsappMessage || `Hola M&S Estudio, quiero consultar por el servicio: ${service.name}.`;
   const bookingHref = `/agendar/servicio/${service.slug || service.id}`;
 
   return (
@@ -22,30 +22,41 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       <div className="container-shell grid gap-10 lg:grid-cols-[1fr_0.85fr]">
         <div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-cream shadow-soft">
-            <Image src={service.imageUrl} alt={service.name} fill className="object-cover" priority sizes="(min-width: 1024px) 55vw, 100vw" />
+            {service.imageUrl ? (
+              <Image src={service.imageUrl} alt={service.name} fill className="object-cover" priority sizes="(min-width: 1024px) 55vw, 100vw" />
+            ) : (
+              <div className="grid h-full place-items-center text-sm font-semibold text-muted">Imagen pendiente de agregar</div>
+            )}
           </div>
         </div>
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-cocoa">{service.category}</p>
           <h1 className="mt-3 font-display text-5xl font-bold">{service.name}</h1>
-          <p className="mt-4 leading-7 text-muted">{service.description}</p>
+          {service.description && <p className="mt-4 leading-7 text-muted">{service.description}</p>}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <Info label="Precio" value={formatPrice(service.priceFrom, service.requiresQuote)} />
-            <Info label="Duración" value={formatDuration(service.durationMinutes)} />
+            <Info label="Precio" value={service.priceLabel || formatPrice(service.priceFrom, service.requiresQuote)} />
+            <Info label="Duración" value={service.durationLabel || formatDuration(service.durationMinutes)} />
           </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Link href={bookingHref}>
-              <Button className="w-full sm:w-auto">
-                <CalendarDays size={18} />
-                Agendar
-              </Button>
-            </Link>
-            <Link href={whatsappLink(message, settings.whatsapp)} target="_blank">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <MessageCircle size={18} />
-                WhatsApp
-              </Button>
-            </Link>
+            {service.bookingEnabled !== false && (
+              <Link href={bookingHref}>
+                <Button className="w-full sm:w-auto">
+                  <CalendarDays size={18} />
+                  Agendar
+                </Button>
+              </Link>
+            )}
+            {service.whatsappEnabled !== false && settings.whatsapp.trim() && (
+              <Link href={whatsappLink(message, settings.whatsapp)} target="_blank">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <MessageCircle size={18} />
+                  WhatsApp
+                </Button>
+              </Link>
+            )}
+            {service.bookingEnabled === false && service.whatsappEnabled === false && (
+              <p className="rounded-lg bg-cream px-4 py-3 text-sm font-semibold text-muted">Este servicio no recibe solicitudes por el momento.</p>
+            )}
           </div>
           <DetailList title="Recomendaciones" icon="check" items={service.recommendations} />
           <DetailList title="Qué incluye" icon="check" items={service.includes} />
@@ -66,6 +77,8 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 function DetailList({ title, items, icon }: { title: string; items: string[]; icon: "check" | "x" }) {
+  if (!items.length) return null;
+
   return (
     <div className="mt-7">
       <h2 className="font-display text-2xl font-bold">{title}</h2>

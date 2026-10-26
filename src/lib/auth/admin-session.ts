@@ -52,7 +52,7 @@ export async function verifyAdminSessionToken(token?: string | null): Promise<Ad
 }
 
 function getSecret() {
-  const secret = process.env.ADMIN_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secret = process.env.ADMIN_SESSION_SECRET;
   if (secret) return secret;
   if (process.env.NODE_ENV === "production") {
     throw new Error("ADMIN_SESSION_SECRET is required in production.");
@@ -70,16 +70,26 @@ async function sign(value: string) {
     ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
-  return base64UrlEncode(String.fromCharCode(...new Uint8Array(signature)));
+  return bytesToBase64Url(new Uint8Array(signature));
 }
 
+function bytesToBase64Url(bytes: Uint8Array) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+// btoa/atob solo aceptan Latin-1: con un avatarUrl o username con caracteres
+// unicode lanzarían excepción y romperían el login. Se codifica vía UTF-8.
 function base64UrlEncode(value: string) {
-  return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return bytesToBase64Url(new TextEncoder().encode(value));
 }
 
 function base64UrlDecode(value: string) {
   const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
-  return atob(padded);
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function timingSafeEqual(a: string, b: string) {
