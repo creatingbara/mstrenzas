@@ -60,12 +60,17 @@ export async function POST(request: Request) {
 }
 
 function getClientKey(request: Request) {
+  const cloudflareIp = request.headers.get("cf-connecting-ip")?.trim();
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwardedFor || request.headers.get("x-real-ip") || "local";
+  return cloudflareIp || forwardedFor || request.headers.get("x-real-ip") || "local";
 }
 
 function isRateLimited(clientKey: string) {
   const now = Date.now();
+  for (const [key, attempt] of appointmentAttempts) {
+    if (attempt.resetAt <= now) appointmentAttempts.delete(key);
+  }
+
   const current = appointmentAttempts.get(clientKey);
 
   if (!current || current.resetAt <= now) {
