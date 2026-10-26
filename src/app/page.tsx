@@ -77,7 +77,7 @@ export default async function HomePage() {
               </Button>
             </Link>
           </div>
-          <GalleryGrid featured />
+          <GalleryGrid category="Extensiones" />
         </div>
       </section>
       <BeforeBookingSection />
