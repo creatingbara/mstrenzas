@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Instagram } from "lucide-react";
 import { getGalleryItems } from "@/lib/local-db";
 
-export async function GalleryGrid({ featured = false }: { featured?: boolean }) {
-  const list = await getGalleryItems({ activeOnly: true, featuredOnly: featured });
+export async function GalleryGrid({ featured = false, category }: { featured?: boolean; category?: string }) {
+  const list = await getGalleryItems({ activeOnly: true, featuredOnly: featured, category });
 
   if (!list.length) {
     return <p className="rounded-lg bg-white p-6 text-sm font-semibold text-muted shadow-soft">Pronto agregaremos nuevos trabajos destacados.</p>;
