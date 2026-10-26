@@ -1,5 +1,13 @@
-import { beforeBookingItems } from "@/lib/data";
+import { beforeBookingItems, services } from "@/lib/data";
 import type { AgendaPageContent } from "@/types/agenda-page";
+
+const serviceSlugsForAudience = (audience: "dama" | "caballero") =>
+  services
+    .filter((service) => {
+      const isMenService = service.category.toLowerCase().includes("caballero");
+      return audience === "caballero" ? isMenService : !isMenService;
+    })
+    .map((service) => service.slug);
 
 export const defaultAgendaPages: AgendaPageContent[] = [
   {
@@ -11,15 +19,7 @@ export const defaultAgendaPages: AgendaPageContent[] = [
     buttonHref: null,
     sections: [],
     items: [],
-    serviceSlugs: [
-      "trenzas-africanas",
-      "box-braids",
-      "knotless-braids",
-      "trenzas-sueltas",
-      "trenzas-pegadas",
-      "diseno-personalizado",
-      "postura-de-extensiones"
-    ]
+    serviceSlugs: serviceSlugsForAudience("dama")
   },
   {
     pageKey: "caballero",
@@ -30,7 +30,7 @@ export const defaultAgendaPages: AgendaPageContent[] = [
     buttonHref: null,
     sections: [],
     items: [],
-    serviceSlugs: ["trenzas-pegadas", "diseno-personalizado"]
+    serviceSlugs: serviceSlugsForAudience("caballero")
   },
   {
     pageKey: "extensiones-humanas",

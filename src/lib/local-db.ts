@@ -2,7 +2,7 @@ import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypt
 import { defaultAgendaPages } from "@/lib/agenda-page-defaults";
 import { fallbackAppointmentData, normalizeTime } from "@/lib/appointments";
 import { defaultBookingMenuItems } from "@/lib/booking-menu-defaults";
-import { generateAvailableSlots, getAppointmentEndTime } from "@/lib/booking/availability";
+import { generateAvailableSlots, getAppointmentBlockStartTime, getAppointmentEndTime } from "@/lib/booking/availability";
 import { galleryItems as seedGalleryItems, products as seedProducts, services, siteSettings } from "@/lib/data";
 import { execute, query, queryOne, withTransaction } from "@/lib/db/pg";
 import { internalEmailForUsername, isInternalUsernameEmail, normalizeUsername, usernameFromName, validateUsername } from "@/lib/utils/username";
@@ -1250,12 +1250,20 @@ export async function createAppointmentBooking({
   const staff = await getStaffMember(staffMemberId);
   if (!staff || !staff.isActive) throw new Error("Colaborador no disponible.");
   if (!staff.services.includes(service.id)) throw new Error("Este colaborador no ofrece el servicio seleccionado.");
+  if (service.requiresDeposit && values.depositPolicyAccepted !== true) {
+    throw new Error("Debes aceptar la politica de anticipo para solicitar este servicio.");
+  }
 
   const startTime = normalizeTime(selectedTime);
-  const endTime = getAppointmentEndTime(startTime, service.durationMinutes);
+  const preparationMinutes = Math.max(0, service.prepMinutes ?? 0);
+  const serviceBufferMinutes = Math.max(0, service.bufferAfterMinutes ?? 0);
+  const blockStartTime = getAppointmentBlockStartTime(startTime, preparationMinutes);
+  const endTime = getAppointmentEndTime(startTime, service.durationMinutes + serviceBufferMinutes);
   const availableSlots = generateAvailableSlots({
     date: parseDateKey(appointmentDate),
     durationMinutes: service.durationMinutes,
+    prepMinutes: preparationMinutes,
+    bufferAfterMinutes: serviceBufferMinutes,
     businessHours: await getStaffBusinessHours(staff.id),
     exceptions: await getStaffExceptions(staff.id),
     appointments: await getStaffAppointments(staff.id)
@@ -1279,7 +1287,7 @@ export async function createAppointmentBooking({
           and start_time < $3
           and end_time > $4
         limit 1`,
-      [appointmentDate, staff.id, endTime, startTime]
+      [appointmentDate, staff.id, endTime, blockStartTime]
     );
 
     if (existing.rows.length > 0) {
@@ -1483,19 +1491,27 @@ function mapGalleryItem(row: GalleryItemRow): GalleryItem {
 
 export async function getGalleryItems({
   activeOnly = false,
-  featuredOnly = false
+  featuredOnly = false,
+  category
 }: {
   activeOnly?: boolean;
   featuredOnly?: boolean;
+  category?: string;
 } = {}): Promise<GalleryItem[]> {
   await ready();
 
   const filters: string[] = [];
+  const params: unknown[] = [];
   if (activeOnly) filters.push("is_active = 1");
   if (featuredOnly) filters.push("featured = 1");
+  if (category?.trim()) {
+    params.push(category.trim());
+    filters.push(`category = $${params.length}`);
+  }
 
   const rows = await query<GalleryItemRow>(
-    `select * from gallery_items${filters.length ? ` where ${filters.join(" and ")}` : ""} order by sort_order, created_at`
+    `select * from gallery_items${filters.length ? ` where ${filters.join(" and ")}` : ""} order by sort_order, created_at`,
+    params
   );
   return rows.map(mapGalleryItem);
 }
@@ -1606,9 +1622,12 @@ type AgendaPageRow = {
   service_slugs_json: string | null;
 };
 
-function mapAgendaPage(row: AgendaPageRow): AgendaPageContent {
+function mapAgendaPage(row: AgendaPageRow, availableServiceSlugs?: Set<string>): AgendaPageContent {
   const fallback = defaultAgendaPages.find((page) => page.pageKey === row.page_key);
-  const serviceSlugs = parseJsonList(row.service_slugs_json, []);
+  const storedServiceSlugs = parseJsonList(row.service_slugs_json, []);
+  const serviceSlugs = availableServiceSlugs
+    ? storedServiceSlugs.filter((slug) => availableServiceSlugs.has(slug))
+    : storedServiceSlugs;
 
   return {
     pageKey: row.page_key,
@@ -1641,7 +1660,9 @@ function parseAgendaSections(value: string) {
 export async function getAgendaPages() {
   await ready();
   const rows = await query<AgendaPageRow>("select * from agenda_pages order by page_key");
-  return rows.map(mapAgendaPage);
+  const currentServices = await getServices();
+  const availableServiceSlugs = new Set(currentServices.map((service) => service.slug));
+  return rows.map((row) => mapAgendaPage(row, availableServiceSlugs));
 }
 
 export async function getAgendaPage(pageKey: string): Promise<AgendaPageContent> {
@@ -2153,7 +2174,7 @@ export async function createCustomService(input: ServiceOverridePatch): Promise<
       input.description?.trim() || "Describe este servicio.",
       input.fullDescription?.trim() || null,
       input.category?.trim() || "Servicios",
-      input.imageUrl?.trim() || "/services/trenzas-africanas.jpg",
+      input.imageUrl?.trim() || "",
       JSON.stringify(input.galleryImages ?? []),
       input.priceFrom ?? null,
       input.priceTo ?? null,

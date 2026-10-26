@@ -1,6 +1,6 @@
 import type { BookingFormValues } from "@/lib/validations";
 
-export const DEFAULT_WHATSAPP = "18090000000";
+export const DEFAULT_WHATSAPP = "18296779644";
 
 export function whatsappLink(message: string, phone = DEFAULT_WHATSAPP) {
   const normalized = phone.replace(/[^\d]/g, "");

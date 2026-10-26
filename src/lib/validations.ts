@@ -31,7 +31,7 @@ export const appointmentBookingSchema = z.object({
     .trim()
     .min(10, "Cuéntanos al menos el color, largo o estilo que deseas.")
     .max(700, "La nota es muy larga."),
-  depositPolicyAccepted: z.boolean().refine((value) => value, "Debes aceptar la politica de anticipo."),
+  depositPolicyAccepted: z.boolean().optional(),
   website: z.string().max(0, "Solicitud no valida.").optional()
 });
 
