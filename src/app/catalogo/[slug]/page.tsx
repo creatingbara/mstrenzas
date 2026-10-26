@@ -22,16 +22,20 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       <div className="container-shell grid gap-10 lg:grid-cols-[1fr_0.85fr]">
         <div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-cream shadow-soft">
-            <Image src={service.imageUrl} alt={service.name} fill className="object-cover" priority sizes="(min-width: 1024px) 55vw, 100vw" />
+            {service.imageUrl ? (
+              <Image src={service.imageUrl} alt={service.name} fill className="object-cover" priority sizes="(min-width: 1024px) 55vw, 100vw" />
+            ) : (
+              <div className="grid h-full place-items-center text-sm font-semibold text-muted">Imagen pendiente de agregar</div>
+            )}
           </div>
         </div>
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-cocoa">{service.category}</p>
           <h1 className="mt-3 font-display text-5xl font-bold">{service.name}</h1>
-          <p className="mt-4 leading-7 text-muted">{service.description}</p>
+          {service.description && <p className="mt-4 leading-7 text-muted">{service.description}</p>}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <Info label="Precio" value={formatPrice(service.priceFrom, service.requiresQuote)} />
-            <Info label="Duración" value={formatDuration(service.durationMinutes)} />
+            <Info label="Precio" value={service.priceLabel || formatPrice(service.priceFrom, service.requiresQuote)} />
+            <Info label="Duración" value={service.durationLabel || formatDuration(service.durationMinutes)} />
           </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link href={bookingHref}>
@@ -66,6 +70,8 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 function DetailList({ title, items, icon }: { title: string; items: string[]; icon: "check" | "x" }) {
+  if (!items.length) return null;
+
   return (
     <div className="mt-7">
       <h2 className="font-display text-2xl font-bold">{title}</h2>
