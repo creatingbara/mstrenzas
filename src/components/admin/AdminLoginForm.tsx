@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Fingerprint, LockKeyhole } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
@@ -8,6 +8,26 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+
+const DEFAULT_ADMIN_PATH = "/admin/dashboard";
+
+function getSafeAdminPath(path: string | null | undefined) {
+  if (!path) return DEFAULT_ADMIN_PATH;
+
+  try {
+    const destination = new URL(path, window.location.origin);
+    const isAdminPath = destination.pathname.startsWith("/admin/");
+    const isLoginPath = destination.pathname === "/admin/login";
+
+    if (destination.origin !== window.location.origin || !isAdminPath || isLoginPath) {
+      return DEFAULT_ADMIN_PATH;
+    }
+
+    return `${destination.pathname}${destination.search}${destination.hash}`;
+  } catch {
+    return DEFAULT_ADMIN_PATH;
+  }
+}
 
 export function AdminLoginForm() {
   return (
@@ -18,7 +38,6 @@ export function AdminLoginForm() {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -74,8 +93,9 @@ function LoginForm() {
 
     if (localResponse.ok) {
       const result = (await localResponse.json()) as { redirectTo?: string };
-      const nextPath = requestedNextPath || result.redirectTo || "/admin/dashboard";
-      router.replace(nextPath);
+      const nextPath = getSafeAdminPath(requestedNextPath || result.redirectTo);
+      // Auth changes need a document load so the server-rendered admin layout is rebuilt.
+      window.location.replace(nextPath);
       return;
     }
 
@@ -114,7 +134,8 @@ function LoginForm() {
       const result = (await verifyResponse.json()) as { redirectTo?: string; error?: string };
       if (!verifyResponse.ok) throw new Error(result.error || "No se pudo verificar tu identidad.");
 
-      router.replace(result.redirectTo || "/admin/dashboard");
+      // Auth changes need a document load so the server-rendered admin layout is rebuilt.
+      window.location.replace(getSafeAdminPath(result.redirectTo));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No se pudo verificar tu identidad. Puedes seguir entrando con tu contrasena.");
     } finally {
