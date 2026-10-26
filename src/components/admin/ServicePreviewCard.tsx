@@ -23,7 +23,7 @@ export function ServicePreviewCard({ service }: { service: Service }) {
           <span className="text-sm font-bold text-ink">{price}</span>
         </div>
         <h3 className="font-display text-2xl font-bold">{service.name}</h3>
-        <p className="mt-2 min-h-12 text-sm leading-6 text-muted">{service.description}</p>
+        {service.description && <p className="mt-2 min-h-12 text-sm leading-6 text-muted">{service.description}</p>}
         <div className="mt-4 flex items-center gap-2 text-sm text-muted">
           <Clock size={16} />
           {duration}

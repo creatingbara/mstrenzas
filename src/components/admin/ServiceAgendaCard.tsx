@@ -49,7 +49,7 @@ export function ServiceAgendaCard({
             {duration}
           </span>
         </div>
-        <p className="min-h-12 text-sm leading-6 text-muted">{service.description}</p>
+        {service.description && <p className="min-h-12 text-sm leading-6 text-muted">{service.description}</p>}
         <div className="mt-4 grid gap-2 text-sm text-muted">
           <span className="flex items-center gap-2">
             <CalendarDays size={16} />

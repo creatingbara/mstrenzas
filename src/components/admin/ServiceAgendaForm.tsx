@@ -137,13 +137,20 @@ export function ServiceAgendaForm({
     setSaving(true);
     setStatus(null);
 
+    const imageUrl = form.imageUrl.trim();
+    if (!imageUrl) {
+      setStatus({ type: "error", message: "Agrega una imagen o sube una foto antes de guardar el servicio." });
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       slug: form.slug || slugify(form.name),
       name: form.name,
       category: form.category,
       description: form.description,
       fullDescription: form.fullDescription || null,
-      imageUrl: form.imageUrl || "/services/trenzas-africanas.jpg",
+      imageUrl,
       galleryImages: listFromText(form.galleryImages),
       active: form.active,
       featured: form.featured,
@@ -181,11 +188,15 @@ export function ServiceAgendaForm({
       const result = (await response.json()) as ServiceResponse;
       if (!response.ok || !result.item) throw new Error(result.error || "No se pudo guardar el servicio.");
 
-      await fetch(`/api/admin/servicios/${result.item.id}/staff`, {
+      const staffResponse = await fetch(`/api/admin/servicios/${result.item.id}/staff`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ staffIds: selectedStaffIds })
       });
+      const staffResult = (await staffResponse.json()) as { error?: string };
+      if (!staffResponse.ok) {
+        throw new Error(staffResult.error || "El servicio se guardó, pero no se pudo actualizar el equipo asignado.");
+      }
 
       setStatus({ type: "ok", message: result.message || "Servicio guardado." });
       if (mode === "create") router.push(`/admin/servicios-agenda/${result.item.id}`);

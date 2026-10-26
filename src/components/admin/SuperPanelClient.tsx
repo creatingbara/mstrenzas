@@ -843,41 +843,6 @@ function PreviewTab({
   );
 }
 
-function PreparedTab({
-  tab,
-  theme,
-  navigation,
-  sectionsByPage
-}: {
-  tab: { label: string; icon: typeof Palette };
-  theme: AppThemeSettings;
-  navigation: AppNavigationItem[];
-  sectionsByPage: Record<string, AppPageSection[]>;
-}) {
-  const pageCount = Object.keys(sectionsByPage).length;
-
-  return (
-    <section className="rounded-lg border border-cocoa/10 bg-white p-6">
-      <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div>
-          <div className="grid size-14 place-items-center rounded-lg bg-cream text-cocoa">
-            <tab.icon size={24} />
-          </div>
-          <h3 className="mt-4 font-display text-3xl font-bold">{tab.label}</h3>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            Esta area queda preparada en la estructura del Super Panel. La base de datos ya tiene tabla dedicada para extenderla en la siguiente fase sin tocar las areas actuales.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Metric label="Color principal" value={theme.primaryColor} />
-          <Metric label="Items menu" value={String(navigation.length)} />
-          <Metric label="Paginas listas" value={String(pageCount)} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function ThemePreview({ theme }: { theme: AppThemeSettings }) {
   const style = {
     "--preview-primary": theme.primaryColor || defaultThemeSettings.primaryColor,

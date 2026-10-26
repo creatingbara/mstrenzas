@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, ChevronDown, LogOut, Menu, Monitor, Moon, Settings, Sun, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AdminSession } from "@/lib/auth/admin-session";
@@ -37,6 +38,7 @@ export function AdminHeader({
   menuControlId: string;
   adminUi: AppAdminUiSettings;
 }) {
+  const router = useRouter();
   const [theme, setTheme] = useState<ThemeMode>("system");
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const profilePath = `/admin/equipo/${session.staffMemberId || session.profileId}`;
@@ -68,7 +70,7 @@ export function AdminHeader({
 
   async function signOut() {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin";
+    router.replace("/admin");
   }
 
   function toggle(menu: OpenMenu) {

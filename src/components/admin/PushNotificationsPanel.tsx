@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, BellOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type PushInfo = {
@@ -22,11 +22,7 @@ export function PushNotificationsPanel() {
   const [info, setInfo] = useState<PushInfo | null>(null);
   const [notice, setNotice] = useState<Notice>({ type: "muted", message: "Comprobando notificaciones..." });
 
-  useEffect(() => {
-    void refreshStatus();
-  }, []);
-
-  async function refreshStatus() {
+  const refreshStatus = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -64,7 +60,11 @@ export function PushNotificationsPanel() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    void refreshStatus();
+  }, [refreshStatus]);
 
   async function activate() {
     setSaving(true);
