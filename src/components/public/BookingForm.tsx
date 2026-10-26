@@ -35,6 +35,10 @@ export function BookingForm({ whatsappPhone }: { whatsappPhone?: string }) {
 
   async function onSubmit(values: BookingFormValues) {
     setFormNotice(null);
+    if (!whatsappPhone?.trim()) {
+      setFormNotice("El contacto por WhatsApp aún no está configurado. Puedes elegir un servicio en el catálogo para revisar la agenda.");
+      return;
+    }
     const link = whatsappLink(bookingWhatsAppMessage(values), whatsappPhone);
 
     setFormNotice("Tu mensaje está listo para WhatsApp. Para reservar con calendario, usa el botón Agendar de un servicio.");

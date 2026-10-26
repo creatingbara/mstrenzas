@@ -25,11 +25,13 @@ export function BookingScheduler({
   service,
   bookingData,
   whatsappPhone,
+  whatsappMessageTemplate,
   bookingPolicy
 }: {
   service: Service;
   bookingData: ServiceBookingData;
   whatsappPhone: string;
+  whatsappMessageTemplate: string;
   bookingPolicy?: string;
 }) {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
@@ -183,6 +185,7 @@ export function BookingScheduler({
           selectedDate={selectedDate}
           selectedTime={selectedSlot.time}
           whatsappPhone={whatsappPhone}
+          whatsappMessageTemplate={whatsappMessageTemplate}
           bookingPolicy={bookingPolicy}
           onBooked={(appointment) => {
             setBookedAppointments((current) => ({

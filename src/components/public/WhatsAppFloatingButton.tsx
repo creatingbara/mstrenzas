@@ -6,6 +6,7 @@ import type { AppFooterSettings } from "@/types/super-panel";
 
 export function WhatsAppFloatingButton({ settings, footer }: { settings: SiteSettings; footer?: AppFooterSettings }) {
   const phone = footer?.whatsapp || settings.whatsapp;
+  if (!phone.trim()) return null;
 
   return (
     <Link

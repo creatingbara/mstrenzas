@@ -29,7 +29,7 @@ export function ContactSection({
               "Escribenos por WhatsApp para consultas rapidas o entra al calendario para seleccionar servicio, fecha y hora disponible."}
           </p>
           <div className="mt-8 grid gap-3">
-            <Info icon={<MessageCircle size={20} />} label="WhatsApp" value="Cotizaciones y citas" href={whatsappLink(settings.whatsappMessage, settings.whatsapp)} />
+            {settings.whatsapp.trim() && <Info icon={<MessageCircle size={20} />} label="WhatsApp" value="Cotizaciones y citas" href={whatsappLink(settings.whatsappMessage, settings.whatsapp)} />}
             <Info icon={<Instagram size={20} />} label="Instagram" value={instagramValue} href={settings.instagram} />
             <Info icon={<MapPin size={20} />} label="Zona" value={settings.zone} />
             <Info icon={<Clock size={20} />} label="Horarios" value={settings.hours} />
@@ -49,12 +49,14 @@ export function ContactSection({
                 {introSection?.buttonLabel || "Ver catalogo y agendar"}
               </Button>
             </Link>
-            <Link href={whatsappLink(settings.whatsappMessage, settings.whatsapp)} target="_blank">
-              <Button variant="outline" className="w-full">
-                <MessageCircle size={18} />
-                {agendaSection?.buttonLabel || "WhatsApp"}
-              </Button>
-            </Link>
+            {settings.whatsapp.trim() && (
+              <Link href={whatsappLink(settings.whatsappMessage, settings.whatsapp)} target="_blank">
+                <Button variant="outline" className="w-full">
+                  <MessageCircle size={18} />
+                  {agendaSection?.buttonLabel || "WhatsApp"}
+                </Button>
+              </Link>
+            )}
           </div>
         </Card>
       </div>

@@ -5,7 +5,7 @@ import { getGalleryItems, getProducts, getServices } from "@/lib/local-db";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
-  title: "Dashboard | Panel M&S Trenzas"
+  title: "Dashboard | Panel M&S Estudio"
 };
 
 export default async function AdminDashboardPage() {
@@ -22,7 +22,7 @@ export default async function AdminDashboardPage() {
       <section className="min-w-0">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-cocoa">Panel administrativo</p>
         <h2 className="mt-2 text-3xl font-black text-ink md:text-4xl">Dashboard</h2>
-        <p className="mt-2 text-sm text-muted">Vista general de servicios, solicitudes y contenido de M&S Trenzas.</p>
+        <p className="mt-2 text-sm text-muted">Vista general de servicios, solicitudes y contenido de M&S Estudio.</p>
       </section>
       <DashboardOverview appointments={appointments} services={services} staffMembers={staffMembers} galleryItems={galleryItems} products={products} />
     </div>

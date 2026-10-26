@@ -1,15 +1,14 @@
 import type { BookingFormValues } from "@/lib/validations";
 
-export const DEFAULT_WHATSAPP = "18296779644";
-
-export function whatsappLink(message: string, phone = DEFAULT_WHATSAPP) {
+export function whatsappLink(message: string, phone = "") {
   const normalized = phone.replace(/[^\d]/g, "");
+  if (!normalized) return "";
   return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
 }
 
 export function bookingWhatsAppMessage(values?: Partial<BookingFormValues>) {
   return [
-    "Hola M&S Trenzas, quiero agendar una cita.",
+    "Hola M&S Estudio, quiero agendar una cita.",
     "",
     `Nombre: ${values?.fullName ?? ""}`,
     `Servicio: ${values?.serviceSlug ?? ""}`,

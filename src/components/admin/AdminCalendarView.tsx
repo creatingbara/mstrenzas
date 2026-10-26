@@ -52,7 +52,7 @@ const statusStyles: Record<AppointmentStatus, { card: string; dot: string; chip:
   }
 };
 
-const staffPalette = ["#9b1178", "#0f766e", "#b45309", "#2563eb", "#7c3aed", "#be123c", "#15803d", "#a16207"];
+const staffPalette = ["#310032", "#0f766e", "#b45309", "#2563eb", "#7c3aed", "#be123c", "#15803d", "#a16207"];
 
 export function AdminCalendarView({
   appointments: initialAppointments,

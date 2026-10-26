@@ -91,10 +91,13 @@ export function AdminHeader({
             <Menu size={19} />
           </label>
           <div className="flex min-w-0 items-center gap-3">
-            <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-cocoa dark:text-pink-300 sm:block">{adminUi.adminSubtitle}</p>
-            <span className="block h-10 w-[5.4rem] shrink-0 overflow-hidden sm:h-12 sm:w-[8.5rem]">
-              <img src="/brand/admin-logo-light-full.png" alt="M&S Trenzas" className="h-full w-full object-contain object-left dark:hidden" />
-              <img src="/brand/admin-logo-dark-full.png" alt="M&S Trenzas" className="hidden h-full w-full object-contain object-left dark:block" />
+            <span className="relative size-10 shrink-0 sm:size-11">
+              <img src="/brand/ms-estudio-logo.png" alt="M&S Estudio" className="h-full w-full object-contain dark:hidden" />
+              <img src="/brand/ms-estudio-logo-negativo.png" alt="M&S Estudio" className="hidden h-full w-full object-contain dark:block" />
+            </span>
+            <span className="hidden min-w-0 sm:block">
+              <span className="block font-display text-lg font-bold leading-none text-ink dark:text-white">M&amp;S Estudio</span>
+              <span className="mt-1 block text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted dark:text-white/65">{adminUi.adminSubtitle}</span>
             </span>
           </div>
         </div>

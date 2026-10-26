@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --app-primary-color: #65004d;
-  --app-secondary-color: #c8a45d;
-  --app-accent-color: #9b1178;
+  --app-primary-color: #310032;
+  --app-secondary-color: #330428;
+  --app-accent-color: #330428;
   --app-background-color: #fff8fc;
   --app-text-color: #171217;
-  --app-dark-primary-color: #f0a9d9;
-  --app-dark-background-color: #15000f;
+  --app-dark-primary-color: #fff8fc;
+  --app-dark-background-color: #1b071b;
   --app-dark-text-color: #f8edf5;
-  --app-font-heading: var(--font-playfair), "Playfair Display", serif;
-  --app-font-body: var(--font-inter), Inter, sans-serif;
+  --app-font-heading: var(--font-cormorant), "Cormorant Garamond", serif;
+  --app-font-body: var(--font-dm-sans), "DM Sans", sans-serif;
   --app-border-radius: 8px;
   --app-button-radius: 999px;
   --app-card-shadow: 0 18px 50px color-mix(in srgb, var(--app-primary-color) 10%, transparent);
@@ -32,12 +32,12 @@ body {
   min-height: 100vh;
   margin: 0;
   color: var(--app-text-color);
-  background: linear-gradient(180deg, var(--app-background-color) 0%, #ffffff 46%, #f7eaf3 100%);
+  background: linear-gradient(180deg, var(--app-background-color) 0%, #ffffff 58%, var(--app-background-color) 100%);
 }
 
 html.dark body {
   color: var(--app-dark-text-color);
-  background: linear-gradient(180deg, var(--app-dark-background-color) 0%, #26011d 48%, #13000f 100%);
+  background: linear-gradient(180deg, var(--app-dark-background-color) 0%, #260a26 48%, #130813 100%);
 }
 
 a {
@@ -111,7 +111,7 @@ a {
    de los estilos internos del panel administrativo.
 ---------------------------------------------------------------------- */
 .dark .public-scope {
-  color: #f8edf5;
+  color: #fff8fc;
 }
 
 .dark .public-scope .text-ink {
@@ -119,11 +119,11 @@ a {
 }
 
 .dark .public-scope .text-muted {
-  color: rgba(248, 237, 245, 0.72) !important;
+  color: rgba(255, 248, 252, 0.72) !important;
 }
 
 .dark .public-scope .text-cocoa {
-  color: #f0a9d9 !important;
+  color: #fff8fc !important;
 }
 
 .dark .public-scope .bg-white,
@@ -177,12 +177,12 @@ a {
 
 .public-scope .booking-dropdown-item:hover,
 .public-scope .booking-dropdown-item:focus {
-  color: #c8a45d;
+  color: #310032;
   background: rgba(255, 255, 255, 0.12);
 }
 
 .dark .public-scope .booking-dropdown-panel {
-  border-color: rgba(101, 0, 77, 0.18);
+  border-color: rgba(49, 0, 50, 0.18);
   color: #171217;
   background: rgba(255, 248, 252, 0.94);
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
@@ -194,8 +194,8 @@ a {
 
 .dark .public-scope .booking-dropdown-item:hover,
 .dark .public-scope .booking-dropdown-item:focus {
-  color: #65004d;
-  background: rgba(101, 0, 77, 0.1);
+  color: #310032;
+  background: rgba(49, 0, 50, 0.1);
 }
 
 /* ----------------------------------------------------------------------

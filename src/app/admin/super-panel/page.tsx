@@ -10,7 +10,7 @@ import {
 } from "@/lib/super-panel";
 
 export const metadata = {
-  title: "Super Panel | Panel M&S Trenzas"
+  title: "Super Panel | Panel M&S Estudio"
 };
 
 export default async function SuperPanelPage() {

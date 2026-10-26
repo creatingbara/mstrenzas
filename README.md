@@ -220,4 +220,4 @@ Protegidas por `middleware.ts` (cookie de sesión) + verificación de sesión en
 
 ## PWA
 
-`public/manifest.json`, `public/icons/icon.svg`, `public/sw.js`, registro de service worker en producción y metadata en `src/app/layout.tsx`.
+`public/manifest.json`, `public/brand/ms-estudio-app-icon.png`, `public/sw.js`, registro de service worker en producción y metadata en `src/app/layout.tsx`.

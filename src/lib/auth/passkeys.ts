@@ -142,7 +142,7 @@ export function getRelyingParty(request: Request) {
   const origin = process.env.PASSKEY_ORIGIN || `${isLocalhost ? "http" : "https"}://${host}`;
 
   return {
-    rpName: process.env.PASSKEY_RP_NAME || "M&S Trenzas",
+    rpName: process.env.PASSKEY_RP_NAME || "M&S Estudio",
     rpID,
     origin
   };

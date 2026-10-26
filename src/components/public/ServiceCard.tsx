@@ -10,11 +10,11 @@ import type { Service } from "@/types/service";
 export function ServiceCard({ service, whatsappPhone }: { service: Service; whatsappPhone: string }) {
   const serviceKey = service.slug || service.id;
   const bookingHref = `/agendar/servicio/${serviceKey}`;
-  const message = service.whatsappMessage || `Hola M&S Trenzas, quiero consultar por el servicio: ${service.name}.`;
+  const message = service.whatsappMessage || `Hola M&S Estudio, quiero consultar por el servicio: ${service.name}.`;
   const priceText = service.priceLabel || formatPrice(service.priceFrom, service.requiresQuote);
   const durationText = service.durationLabel || formatDuration(service.durationMinutes);
   const canBook = service.bookingEnabled !== false;
-  const canWhatsApp = service.whatsappEnabled !== false;
+  const canWhatsApp = service.whatsappEnabled !== false && Boolean(whatsappPhone.trim());
 
   return (
     <Card className="overflow-hidden p-0">

@@ -3,7 +3,7 @@ import { requireAdminPageAccess } from "@/lib/admin-auth";
 import { getGalleryItems } from "@/lib/local-db";
 
 export const metadata = {
-  title: "Galeria | Panel M&S Trenzas"
+  title: "Galeria | Panel M&S Estudio"
 };
 
 export default async function AdminGalleryPage() {

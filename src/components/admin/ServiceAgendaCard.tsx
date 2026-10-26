@@ -57,12 +57,12 @@ export function ServiceAgendaCard({
           </span>
           <span className="flex items-center gap-2">
             <Users size={16} />
-            Colaboradores: {assignedStaffCount}
+            Colaboradores: {service.allowAnyStaff ? `Cualquiera disponible (${assignedStaffCount})` : assignedStaffCount}
           </span>
         </div>
-        {assignedStaffCount === 0 && (
+        {assignedStaffCount === 0 && !service.allowAnyStaff && (
           <p className="mt-3 rounded-lg bg-cream px-3 py-2 text-sm font-semibold text-cocoa">
-            Este servicio no tiene colaboradores asignados.
+            Asigna una colaboradora o activa “Cualquier colaborador disponible” para recibir citas.
           </p>
         )}
         <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_1.35fr_auto]">

@@ -30,6 +30,9 @@ export default async function HumanHairPage() {
   const sections = pageSectionsByKey(pageSections);
   const intro = sections.intro;
   const quote = sections.quote;
+  const configuredQuoteHref = quote?.buttonUrl?.startsWith("whatsapp:")
+    ? (whatsappPhone.trim() ? whatsappLink(quote.buttonUrl.slice("whatsapp:".length), whatsappPhone) : "")
+    : quote?.buttonUrl || (whatsappPhone.trim() ? whatsappLink("Hola M&S Estudio, quiero cotizar extensiones 100% Human Hair.", whatsappPhone) : "");
 
   return (
     <section className="section-pad">
@@ -44,19 +47,17 @@ export default async function HumanHairPage() {
             </p>
           </div>
           <div className="rounded-lg bg-ink p-6 text-white shadow-soft">
-            <Sparkles className="text-gold" />
+            <Sparkles className="text-white/85" />
             <p className="mt-3 text-2xl font-semibold">{quote?.title || "Cotiza segun textura, largo, color y disponibilidad."}</p>
             {quote?.subtitle && <p className="mt-3 text-sm leading-6 text-white/75">{quote.subtitle}</p>}
-            <Link
-              href={quote?.buttonUrl || whatsappLink("Hola M&S Trenzas, quiero cotizar extensiones 100% Human Hair.", whatsappPhone)}
-              target="_blank"
-              className="mt-5 inline-block"
-            >
-              <Button variant="secondary">
-                <MessageCircle size={18} />
-                {quote?.buttonLabel || "Cotizar por WhatsApp"}
-              </Button>
-            </Link>
+            {configuredQuoteHref && (
+              <Link href={configuredQuoteHref} target={configuredQuoteHref.startsWith("http") ? "_blank" : undefined} className="mt-5 inline-block">
+                <Button variant="secondary">
+                  <MessageCircle size={18} />
+                  {quote?.buttonLabel || "Cotizar por WhatsApp"}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-2">

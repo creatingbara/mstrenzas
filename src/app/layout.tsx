@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -9,13 +9,13 @@ import { getSiteSettings } from "@/lib/local-db";
 import { getAppFooterSettings, getAppNavigationItems, getAppThemeSettings, themeCssVariables } from "@/lib/super-panel";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
+const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-cormorant" });
 
 export const metadata: Metadata = {
-  title: "M&S Trenzas | Trenzas africanas y extensiones 100% Human Hair",
+  title: "M&S Estudio | Trenzas africanas y extensiones 100% Human Hair",
   description:
-    "Agenda tus trenzas africanas, postura de extensiones y servicios de extensiones 100% Human Hair con M&S Trenzas. Estilos elegantes, protectores y personalizados.",
+    "Agenda trenzas africanas, postura de extensiones y servicios 100% Human Hair en M&S Estudio. El arte de transformar.",
   keywords: [
     "trenzas africanas",
     "extensiones humanas",
@@ -24,14 +24,14 @@ export const metadata: Metadata = {
     "box braids",
     "knotless braids",
     "trenzas dominicana",
-    "M&S Trenzas"
+    "M&S Estudio"
   ],
   manifest: "/manifest.json",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000")
 };
 
 export const viewport: Viewport = {
-  themeColor: "#65004d",
+  themeColor: "#310032",
   width: "device-width",
   initialScale: 1
 };
@@ -70,7 +70,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       lang="es"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${inter.variable} ${playfair.variable}`}
+      className={`${dmSans.variable} ${cormorant.variable}`}
       style={themeCssVariables(theme)}
     >
       <head>{theme.faviconUrl && <link rel="icon" href={theme.faviconUrl} />}</head>

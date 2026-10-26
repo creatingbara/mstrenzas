@@ -22,6 +22,7 @@ export function BookingClientForm({
   selectedDate,
   selectedTime,
   whatsappPhone,
+  whatsappMessageTemplate,
   bookingPolicy,
   onBooked
 }: {
@@ -31,10 +32,12 @@ export function BookingClientForm({
   selectedDate: Date;
   selectedTime: string;
   whatsappPhone: string;
+  whatsappMessageTemplate: string;
   bookingPolicy?: string;
   onBooked: (appointment: AppointmentBooking) => void;
 }) {
   const [successLink, setSuccessLink] = useState<string | null>(null);
+  const [booked, setBooked] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const [isUploadingReference, setIsUploadingReference] = useState(false);
@@ -60,7 +63,7 @@ export function BookingClientForm({
     setNotice(null);
     const appointmentDate = format(selectedDate, "yyyy-MM-dd");
     const whatsappMessage = [
-      "Hola M&S Trenzas, acabo de solicitar una cita.",
+      whatsappMessageTemplate.trim() || "Hola M&S Estudio, acabo de solicitar una cita.",
       "",
       `Nombre: ${values.fullName}`,
       `Servicio: ${service.name}`,
@@ -95,8 +98,9 @@ export function BookingClientForm({
       }
 
       onBooked(result.item);
-      setNotice("Horario reservado provisionalmente. Te contactaremos para confirmar.");
-      setSuccessLink(whatsappLink(whatsappMessage, whatsappPhone));
+      setNotice("Horario reservado provisionalmente. El equipo revisará tu solicitud para confirmar la cita.");
+      setSuccessLink(whatsappPhone.trim() ? whatsappLink(whatsappMessage, whatsappPhone) : null);
+      setBooked(true);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo guardar la cita.");
     }
@@ -144,7 +148,7 @@ export function BookingClientForm({
     setUploadNotice(null);
   }
 
-  if (successLink) return <BookingSuccess whatsappUrl={successLink} />;
+  if (booked) return <BookingSuccess whatsappUrl={successLink ?? undefined} />;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="rounded-lg border border-cocoa/10 bg-white p-5 shadow-soft">

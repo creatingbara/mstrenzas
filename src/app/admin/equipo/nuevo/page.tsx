@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata = {
-  title: "Nuevo miembro | Panel M&S Trenzas"
+  title: "Nuevo miembro | Panel M&S Estudio"
 };
 
 export default async function NewTeamMemberPage() {

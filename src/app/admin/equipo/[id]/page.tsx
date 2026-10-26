@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata = {
-  title: "Editar miembro | Panel M&S Trenzas"
+  title: "Editar miembro | Panel M&S Estudio"
 };
 
 export default async function EditTeamMemberPage({ params }: { params: Promise<{ id: string }> }) {

@@ -30,6 +30,11 @@ export default async function HomePage() {
   const servicesSection = sections.servicios;
   const humanHairSection = sections.human_hair;
   const gallerySection = sections.galeria;
+  const humanHairButtonHref = humanHairSection?.buttonUrl?.startsWith("whatsapp:")
+    ? (whatsappPhone.trim() ? whatsappLink(humanHairSection.buttonUrl.slice("whatsapp:".length), whatsappPhone) : "/extensiones-humanas")
+    : humanHairSection?.buttonUrl || (whatsappPhone.trim()
+      ? whatsappLink("Hola M&S Estudio, quiero cotizar extensiones 100% Human Hair.", whatsappPhone)
+      : "/extensiones-humanas");
 
   return (
     <>
@@ -66,14 +71,10 @@ export default async function HomePage() {
               {humanHairSection?.subtitle ||
                 "Trabajamos extensiones humanas de alta calidad para lograr un resultado natural, elegante y duradero. Ideales para cambios de look, volumen, largo y estilos personalizados."}
             </p>
-            <Link
-              href={humanHairSection?.buttonUrl || whatsappLink("Hola M&S Trenzas, quiero cotizar extensiones 100% Human Hair.", whatsappPhone)}
-              target="_blank"
-              className="mt-7 inline-block"
-            >
+            <Link href={humanHairButtonHref} target={humanHairButtonHref.startsWith("http") ? "_blank" : undefined} className="mt-7 inline-block">
               <Button>
                 <MessageCircle size={18} />
-                {humanHairSection?.buttonLabel || "Cotizar extensiones por WhatsApp"}
+                {humanHairSection?.buttonLabel || (whatsappPhone.trim() ? "Cotizar extensiones por WhatsApp" : "Ver extensiones")}
               </Button>
             </Link>
           </div>

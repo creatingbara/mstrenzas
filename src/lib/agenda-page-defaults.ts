@@ -38,7 +38,7 @@ export const defaultAgendaPages: AgendaPageContent[] = [
     title: "Extensiones 100% Human Hair",
     subtitle: "Extensiones humanas de alta calidad para un resultado natural, elegante y duradero.",
     buttonLabel: "Cotizar extensiones por WhatsApp",
-    buttonHref: "whatsapp:Hola M&S Trenzas, quiero cotizar extensiones 100% Human Hair.",
+    buttonHref: "whatsapp:Hola M&S Estudio, quiero cotizar extensiones 100% Human Hair.",
     sections: [
       {
         title: "Qué son las extensiones 100% Human Hair",

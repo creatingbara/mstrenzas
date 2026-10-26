@@ -16,7 +16,7 @@ export function BookingServiceInfo({ service }: { service: Service }) {
       </div>
       <div className="mt-5 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-cocoa">
         <Sparkles size={17} />
-        M&S Trenzas
+        M&amp;S Estudio
       </div>
       <h1 className="mt-3 font-display text-4xl font-bold">{service.name}</h1>
       {service.description && <p className="mt-3 leading-7 text-muted">{service.description}</p>}

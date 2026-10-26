@@ -13,7 +13,7 @@ import type { StaffMember, StaffRole } from "@/types/staff";
 export function CollaboratorForm({
   staff,
   actorRole,
-  redirectBasePath = "/admin/colaboradores",
+  redirectBasePath = "/admin/equipo",
   onRoleChange
 }: {
   staff?: StaffMember | null;

@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [service, settings] = await Promise.all([getServiceById(slug), getSiteSettings()]);
-  if (!service) notFound();
+  if (!service || service.active === false) notFound();
 
-  const message = `Hola M&S Trenzas, quiero agendar o cotizar: ${service.name}.`;
+  const message = service.whatsappMessage || `Hola M&S Estudio, quiero consultar por el servicio: ${service.name}.`;
   const bookingHref = `/agendar/servicio/${service.slug || service.id}`;
 
   return (
@@ -38,18 +38,25 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
             <Info label="Duración" value={service.durationLabel || formatDuration(service.durationMinutes)} />
           </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Link href={bookingHref}>
-              <Button className="w-full sm:w-auto">
-                <CalendarDays size={18} />
-                Agendar
-              </Button>
-            </Link>
-            <Link href={whatsappLink(message, settings.whatsapp)} target="_blank">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <MessageCircle size={18} />
-                WhatsApp
-              </Button>
-            </Link>
+            {service.bookingEnabled !== false && (
+              <Link href={bookingHref}>
+                <Button className="w-full sm:w-auto">
+                  <CalendarDays size={18} />
+                  Agendar
+                </Button>
+              </Link>
+            )}
+            {service.whatsappEnabled !== false && settings.whatsapp.trim() && (
+              <Link href={whatsappLink(message, settings.whatsapp)} target="_blank">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <MessageCircle size={18} />
+                  WhatsApp
+                </Button>
+              </Link>
+            )}
+            {service.bookingEnabled === false && service.whatsappEnabled === false && (
+              <p className="rounded-lg bg-cream px-4 py-3 text-sm font-semibold text-muted">Este servicio no recibe solicitudes por el momento.</p>
+            )}
           </div>
           <DetailList title="Recomendaciones" icon="check" items={service.recommendations} />
           <DetailList title="Qué incluye" icon="check" items={service.includes} />

@@ -11,18 +11,21 @@ import type { AppNavigationItem, AppThemeSettings } from "@/types/super-panel";
 export function Header({ theme, navigation }: { theme: AppThemeSettings; navigation: AppNavigationItem[] }) {
   const [open, setOpen] = useState(false);
   const tree = buildNavigationTree(navigation);
-  const logo = theme.logoUrl || "/brand/logo-ms-trenzas.jpg";
+  const logo = theme.logoUrl || "/brand/ms-estudio-logo.png";
   const darkLogo = theme.logoDarkUrl || logo;
 
   return (
     <header className="sticky top-0 z-40 border-b border-cocoa/10 bg-white/88 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#170011]/90">
       <div className="container-shell flex min-h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold text-ink transition-colors dark:text-white">
-          <span className="relative size-11 overflow-hidden rounded-full border border-cocoa/15 bg-nude">
-            <img src={logo} alt="M&S Trenzas" className="h-full w-full object-cover dark:hidden" />
-            <img src={darkLogo} alt="M&S Trenzas" className="hidden h-full w-full object-cover dark:block" />
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 text-ink transition-colors dark:text-white">
+          <span className="relative size-11 shrink-0">
+            <img src={logo} alt="M&S Estudio" className="h-full w-full object-contain dark:hidden" />
+            <img src={darkLogo} alt="M&S Estudio" className="hidden h-full w-full object-contain dark:block" />
           </span>
-          M&S Trenzas
+          <span className="min-w-0">
+            <span className="block font-display text-xl font-bold leading-none">M&amp;S Estudio</span>
+            <span className="mt-1 block text-[0.56rem] font-semibold uppercase tracking-[0.18em] text-muted dark:text-white/65">El arte de transformar</span>
+          </span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted transition-colors dark:text-pink-100/80 lg:flex">
           {tree.map((item) => (

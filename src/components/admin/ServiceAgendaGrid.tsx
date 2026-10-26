@@ -96,6 +96,15 @@ export function ServiceAgendaGrid({
         </Link>
       </div>
 
+      {staffMembers.length === 0 && (
+        <div className="grid gap-3 rounded-lg border border-cocoa/15 bg-white p-4 sm:flex sm:items-center sm:justify-between">
+          <p className="text-sm leading-6 text-muted">Para recibir citas, primero agrega una colaboradora y configura su horario disponible.</p>
+          <Link href="/admin/equipo/nuevo" className="shrink-0">
+            <Button variant="outline" className="w-full rounded-lg sm:w-auto">Agregar colaboradora</Button>
+          </Link>
+        </div>
+      )}
+
       {notice && <p className="rounded-lg bg-cream p-3 text-sm font-semibold text-cocoa">{notice}</p>}
 
       <div className="grid gap-3 rounded-lg border border-cocoa/10 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr]">

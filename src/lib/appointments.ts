@@ -1,4 +1,4 @@
-import { appointmentBookings, availabilityExceptions, businessHours } from "@/lib/data";
+import { businessHours } from "@/lib/data";
 import type { Database } from "@/types/database";
 import type { AppointmentBooking, AvailabilityException, BusinessHour } from "@/types/appointment";
 
@@ -55,6 +55,6 @@ export function mapAppointmentBooking(row: AppointmentBookingRow): AppointmentBo
 
 export const fallbackAppointmentData = {
   businessHours,
-  exceptions: availabilityExceptions,
-  appointments: appointmentBookings
+  exceptions: [],
+  appointments: []
 };

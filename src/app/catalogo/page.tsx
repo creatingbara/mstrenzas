@@ -33,7 +33,7 @@ export default async function CatalogPage() {
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-cocoa">{intro?.content || "Catalogo"}</p>
           <h1 className="mt-3 font-display text-5xl font-bold">{intro?.title || "Catalogo de estilos y servicios"}</h1>
           <p className="mt-4 leading-7 text-muted">
-            {intro?.subtitle || "Explora servicios por categoría y revisa su precio y duración antes de agendar."}
+            {intro?.subtitle || "Explora los estilos por categoría, revisa su precio y duración, y solicita tu cita desde el servicio que elijas."}
           </p>
         </div>
         <div className="mb-8 flex gap-2 overflow-x-auto pb-2">

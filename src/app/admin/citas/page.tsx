@@ -5,7 +5,7 @@ import { isActiveAppointmentForBookings } from "@/lib/appointment-status";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
-  title: "Citas | Panel M&S Trenzas"
+  title: "Citas | Panel M&S Estudio"
 };
 
 export default async function AdminBookingsPage() {

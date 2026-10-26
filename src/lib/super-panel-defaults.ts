@@ -9,21 +9,21 @@ import type {
 
 export const defaultThemeSettings: AppThemeSettings = {
   id: "default",
-  logoUrl: "/brand/logo-ms-trenzas.jpg",
-  logoDarkUrl: "/brand/logo-ms-trenzas.jpg",
-  faviconUrl: "/icons/icon.svg",
-  primaryColor: "#65004d",
-  secondaryColor: "#c8a45d",
-  accentColor: "#9b1178",
+  logoUrl: "/brand/ms-estudio-logo.png",
+  logoDarkUrl: "/brand/ms-estudio-logo-negativo.png",
+  faviconUrl: "/brand/ms-estudio-app-icon.png",
+  primaryColor: "#310032",
+  secondaryColor: "#330428",
+  accentColor: "#330428",
   backgroundColor: "#fff8fc",
   textColor: "#171217",
-  darkPrimaryColor: "#f0a9d9",
-  darkBackgroundColor: "#15000f",
+  darkPrimaryColor: "#fff8fc",
+  darkBackgroundColor: "#1b071b",
   darkTextColor: "#f8edf5",
-  fontHeading: "var(--font-playfair), 'Playfair Display', serif",
-  fontBody: "var(--font-inter), Inter, sans-serif",
+  fontHeading: "var(--font-cormorant), 'Cormorant Garamond', serif",
+  fontBody: "var(--font-dm-sans), 'DM Sans', sans-serif",
   borderRadius: "8px",
-  buttonStyle: "pill",
+  buttonStyle: "rounded",
   cardStyle: "soft",
   updatedAt: null
 };
@@ -54,10 +54,10 @@ export const defaultSeoSettings: Record<string, AppSeoSettings> = Object.fromEnt
     {
       id: `seo-${page.key}`,
       pageKey: page.key,
-      title: `${page.label} | M&S Trenzas`,
-      description: "M&S Trenzas: trenzas africanas, extensiones y estilos protectores con acabado profesional.",
+      title: `${page.label} | M&S Estudio`,
+      description: "M&S Estudio: trenzas africanas, extensiones y estilos protectores con atención profesional.",
       keywords: "M&S Trenzas, trenzas africanas, extensiones, beauty salon",
-      ogImageUrl: "/brand/hero-ms-trenzas.jpg",
+      ogImageUrl: "/brand/ms-estudio-logo.png",
       createdAt: null,
       updatedAt: null
     }
@@ -66,36 +66,36 @@ export const defaultSeoSettings: Record<string, AppSeoSettings> = Object.fromEnt
 
 export const defaultFooterSettings: AppFooterSettings = {
   id: "default",
-  businessName: "M&S Trenzas",
-  description: "Trenzas africanas, estilos protectores y extensiones 100% Human Hair con acabado profesional.",
+  businessName: "M&S Estudio",
+  description: "El arte de transformar.",
   whatsapp: "",
   instagramUrl: "",
   address: "",
   schedule: "",
-  copyrightText: `© ${new Date().getFullYear()} M&S Trenzas. Todos los derechos reservados.`,
+  copyrightText: `© ${new Date().getFullYear()} M&S Estudio. Todos los derechos reservados.`,
   updatedAt: null
 };
 
 export const defaultAdminUiSettings: AppAdminUiSettings = {
   id: "default",
-  adminTitle: "Gestion de M&S Trenzas",
+  adminTitle: "Gestion de M&S Estudio",
   adminSubtitle: "Panel administrativo",
-  sidebarLogoUrl: "/brand/logo-ms-trenzas.jpg",
-  sidebarColor: "#320024",
-  sidebarAccentColor: "#9b1178",
+  sidebarLogoUrl: "/brand/ms-estudio-simbolo-negativo.png",
+  sidebarColor: "#310032",
+  sidebarAccentColor: "#330428",
   updatedAt: null
 };
 
 export const defaultPageSections: Record<string, AppPageSection[]> = {
   home: [
-    pageSection("home", "hero", "Trenzas africanas y extensiones con acabado profesional.", "En M&S Trenzas creamos estilos protectores, elegantes y personalizados para que luzcas segura, hermosa y autentica.", "Belleza protectora con acabado premium", "/brand/hero-ms-trenzas.jpg", "Agendar cita", "/catalogo", 10),
+    pageSection("home", "hero", "Agenda tu próxima transformación", "Estilos protectores creados con detalle, técnica y amor por el arte del cabello.", "El arte de transformar", "/brand/ms-estudio-logo.png", "Agendar cita", "/catalogo", 10),
     pageSection("home", "servicios", "Servicios disenados para resaltar tu belleza", "Desde trenzas africanas hasta extensiones 100% Human Hair, trabajamos cada estilo con dedicacion, detalle y amor por el arte del cabello.", "Servicios", "", "Ver catalogo completo", "/catalogo", 20),
     pageSection("home", "human_hair", "Extensiones 100% Human Hair", "Trabajamos extensiones humanas de alta calidad para lograr un resultado natural, elegante y duradero.", "Human Hair", "", "Cotizar extensiones por WhatsApp", "", 30),
     pageSection("home", "galeria", "Resultados que hablan por si solos", "Explora algunos de nuestros trabajos y descubre estilos creados con detalle, amor y profesionalismo.", "Galeria", "", "Ver galeria", "/galeria", 40),
-    pageSection("home", "cta_final", "Lista para tu proximo estilo?", "Agenda desde el catalogo o escribenos por WhatsApp para una orientacion rapida.", "M&S Trenzas", "", "Agendar ahora", "/catalogo", 50)
+    pageSection("home", "cta_final", "Lista para tu proximo estilo?", "Agenda desde el catalogo o escribenos por WhatsApp para una orientacion rapida.", "M&S Estudio", "", "Agendar ahora", "/catalogo", 50)
   ],
   catalogo: [
-    pageSection("catalogo", "intro", "Catalogo de estilos y servicios", "Explora servicios por categoria. Los precios finales se cotizan segun largo, volumen, diseno y tipo de cabello.", "Catalogo", "", "", "", 10)
+    pageSection("catalogo", "intro", "Catálogo de estilos y servicios", "Explora los estilos por categoría, revisa su precio y duración, y solicita tu cita desde el servicio que elijas.", "Catálogo", "", "", "", 10)
   ],
   galeria: [
     pageSection("galeria", "intro", "Galeria e inspiracion desde Instagram", "Trabajos destacados, referencias e ideas seleccionadas manualmente para que la pagina siga estable aunque Instagram no cargue.", "Galeria", "", "Ver mas trabajos en Instagram", "", 10)
@@ -106,11 +106,11 @@ export const defaultPageSections: Record<string, AppPageSection[]> = {
   ],
   "antes-de-agendar": [
     pageSection("antes-de-agendar", "intro", "Informacion para una cita sin sorpresas", "Estas pautas nos ayudan a darte una experiencia organizada, clara y con el resultado que esperas.", "Antes de agendar", "", "", "", 10),
-    pageSection("antes-de-agendar", "recomendaciones", "Recomendaciones generales", "Consejos utiles antes de reservar tu cita.", "M&S Trenzas", "", "", "", 20)
+    pageSection("antes-de-agendar", "recomendaciones", "Recomendaciones generales", "Consejos utiles antes de reservar tu cita.", "M&S Estudio", "", "", "", 20)
   ],
   "extensiones-humanas": [
     pageSection("extensiones-humanas", "intro", "Extensiones 100% Human Hair", "Trabajamos extensiones humanas de alta calidad para cambios de look, volumen, largo y estilos personalizados con acabado natural.", "Extensiones", "", "Cotizar por WhatsApp", "", 10),
-    pageSection("extensiones-humanas", "quote", "Cotiza segun textura, largo, color y disponibilidad.", "Te orientamos por WhatsApp antes de confirmar el servicio.", "M&S Trenzas", "", "Cotizar por WhatsApp", "", 20)
+    pageSection("extensiones-humanas", "quote", "Cotiza segun textura, largo, color y disponibilidad.", "Te orientamos por WhatsApp antes de confirmar el servicio.", "M&S Estudio", "", "Cotizar por WhatsApp", "", 20)
   ]
 };
 

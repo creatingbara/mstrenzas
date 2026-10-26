@@ -6,8 +6,8 @@ import { getProducts, getSiteSettings } from "@/lib/local-db";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const metadata = {
-  title: "Productos | M&S Trenzas",
-  description: "Productos y extensiones disponibles por cotización para M&S Trenzas."
+  title: "Productos | M&S Estudio",
+  description: "Productos y extensiones disponibles por cotización para M&S Estudio."
 };
 
 export const dynamic = "force-dynamic";
@@ -27,14 +27,16 @@ export default async function ProductsPage() {
             </p>
           </div>
           <div className="rounded-lg bg-ink p-6 text-white shadow-soft">
-            <ShoppingBag className="text-gold" />
+            <ShoppingBag className="text-white/85" />
             <p className="mt-3 text-2xl font-semibold">Confirma disponibilidad antes de reservar o comprar.</p>
-            <Link href={whatsappLink("Hola M&S Trenzas, quiero información sobre productos y extensiones.", settings.whatsapp)} target="_blank" className="mt-5 inline-block">
-              <Button variant="secondary">
-                <MessageCircle size={18} />
-                Consultar por WhatsApp
-              </Button>
-            </Link>
+            {settings.whatsapp.trim() && (
+              <Link href={whatsappLink("Hola M&S Estudio, quiero información sobre productos y extensiones.", settings.whatsapp)} target="_blank" className="mt-5 inline-block">
+                <Button variant="secondary">
+                  <MessageCircle size={18} />
+                  Consultar por WhatsApp
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

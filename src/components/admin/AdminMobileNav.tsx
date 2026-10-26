@@ -37,15 +37,15 @@ export function AdminMobileNav({ session }: { session: AdminSession }) {
               className={cn(
                 "relative grid min-h-[3.85rem] min-w-0 place-items-center gap-0.5 rounded-2xl px-0.5 text-center text-[0.68rem] font-black text-[#303942] transition",
                 "dark:text-pink-100/75",
-                active && "text-[#9b1178] dark:text-pink-200"
+                active && "text-[#310032] dark:text-white"
               )}
               aria-current={active ? "page" : undefined}
             >
-              {active && <span className="absolute inset-x-3 -top-2 h-1 rounded-full bg-[#9b1178] dark:bg-pink-300" />}
+              {active && <span className="absolute inset-x-3 -top-2 h-1 rounded-full bg-[#310032] dark:bg-white" />}
               <span
                 className={cn(
                   "grid size-7 place-items-center rounded-2xl transition",
-                  active && "bg-[#f8e9f4] text-[#9b1178] dark:bg-white/10 dark:text-pink-200"
+                  active && "bg-[#f3edf4] text-[#310032] dark:bg-white/10 dark:text-white"
                 )}
               >
                 <Icon size={19} strokeWidth={2.35} />

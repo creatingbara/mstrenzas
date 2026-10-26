@@ -106,15 +106,15 @@ export function AdminSidebar({
     <aside
       className="flex min-h-screen flex-col p-4 text-white"
       style={{
-        background: `radial-gradient(circle at top left, color-mix(in srgb, ${adminUi.sidebarAccentColor} 38%, transparent), transparent 28%), linear-gradient(180deg, ${adminUi.sidebarColor} 0%, #1b0019 100%)`
+        background: `radial-gradient(circle at top left, color-mix(in srgb, ${adminUi.sidebarAccentColor} 32%, transparent), transparent 28%), linear-gradient(180deg, ${adminUi.sidebarColor} 0%, #1b071b 100%)`
       }}
     >
       <Link href="/admin/dashboard" className="flex items-center gap-3 rounded-lg px-2 py-4" onClick={onNavigate}>
-        <span className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-gold/50 bg-nude shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
-          <img src={adminUi.sidebarLogoUrl || "/brand/logo-ms-trenzas.jpg"} alt="M&S Trenzas" className="h-full w-full object-cover" />
+        <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-white/25 bg-white/10 p-2 shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
+          <img src={adminUi.sidebarLogoUrl || "/brand/ms-estudio-simbolo-negativo.png"} alt="M&S Estudio" className="h-full w-full object-contain" />
         </span>
         <span className="min-w-0">
-          <span className="block text-xl font-extrabold text-white">M&S Trenzas</span>
+          <span className="block text-xl font-extrabold text-white">M&amp;S Estudio</span>
           <span className="block text-sm text-white/85">{adminUi.adminSubtitle}</span>
         </span>
       </Link>
@@ -135,9 +135,9 @@ export function AdminSidebar({
                   onClick={onNavigate}
                   className={cn(
                     "flex min-h-14 items-center gap-4 rounded-lg px-4 py-3 text-base font-semibold text-white/90 transition hover:bg-white/12 hover:text-white",
-                    active && "text-white shadow-[0_14px_34px_rgba(155,17,120,0.28)]"
+                    active && "text-white shadow-[0_14px_34px_rgba(0,0,0,0.2)]"
                   )}
-                  style={active ? { backgroundColor: adminUi.sidebarAccentColor } : undefined}
+                  style={active ? { backgroundColor: "rgba(255,255,255,0.16)" } : undefined}
                 >
                   <link.icon size={18} />
                   {link.label}
