@@ -5,6 +5,8 @@ import type { StaffMember, StaffScheduleData } from "@/types/staff";
 export type AvailabilityInput = {
   date: Date;
   durationMinutes: number;
+  prepMinutes?: number | null;
+  bufferAfterMinutes?: number | null;
   businessHours: BusinessHour[];
   exceptions: AvailabilityException[];
   appointments: AppointmentBooking[];
@@ -15,6 +17,8 @@ export type ServiceAvailabilityInput = {
   staffMemberId?: string | null;
   date: Date;
   durationMinutes: number;
+  prepMinutes?: number | null;
+  bufferAfterMinutes?: number | null;
   staffMembers: StaffMember[];
   schedulesByStaff: Record<string, StaffScheduleData>;
 };
@@ -28,6 +32,8 @@ export type StaffAvailabilityGroup = {
 export function generateAvailableSlots({
   date,
   durationMinutes,
+  prepMinutes = 0,
+  bufferAfterMinutes = 0,
   businessHours,
   exceptions,
   appointments
@@ -57,13 +63,20 @@ export function generateAvailableSlots({
   const slots: string[] = [];
   let cursor = parseTimeForDate(date, startTime);
   const closeTime = parseTimeForDate(date, endTime);
+  const preparationMinutes = Math.max(0, prepMinutes ?? 0);
+  const serviceBufferMinutes = Math.max(0, bufferAfterMinutes ?? 0);
 
-  while (addMinutes(cursor, durationMinutes) <= closeTime) {
-    const slotEnd = addMinutes(cursor, durationMinutes + bufferMinutes);
+  while (addMinutes(cursor, durationMinutes + serviceBufferMinutes + bufferMinutes) <= closeTime) {
+    const slotStart = addMinutes(cursor, -preparationMinutes);
+    const slotEnd = addMinutes(cursor, durationMinutes + serviceBufferMinutes + bufferMinutes);
+    if (slotStart < parseTimeForDate(date, startTime)) {
+      cursor = addMinutes(cursor, slotIntervalMinutes);
+      continue;
+    }
     const clashes = dayAppointments.some((appointment) => {
       const appointmentStart = parseTimeForDate(date, appointment.startTime);
       const appointmentEnd = parseTimeForDate(date, appointment.endTime);
-      return cursor < appointmentEnd && slotEnd > appointmentStart;
+      return slotStart < appointmentEnd && slotEnd > appointmentStart;
     });
 
     if (!clashes) slots.push(format(cursor, "HH:mm"));
@@ -78,6 +91,8 @@ export function getServiceAvailability({
   staffMemberId,
   date,
   durationMinutes,
+  prepMinutes,
+  bufferAfterMinutes,
   staffMembers,
   schedulesByStaff
 }: ServiceAvailabilityInput): StaffAvailabilityGroup[] {
@@ -92,6 +107,8 @@ export function getServiceAvailability({
       ? generateAvailableSlots({
           date,
           durationMinutes,
+          prepMinutes,
+          bufferAfterMinutes,
           businessHours: schedule.businessHours,
           exceptions: schedule.exceptions,
           appointments: schedule.appointments
@@ -140,6 +157,10 @@ export function formatDisplayTime(time: string) {
 
 export function getAppointmentEndTime(startTime: string, durationMinutes: number) {
   return format(addMinutes(parse(startTime, "HH:mm", new Date()), durationMinutes), "HH:mm");
+}
+
+export function getAppointmentBlockStartTime(startTime: string, prepMinutes: number) {
+  return format(addMinutes(parse(startTime, "HH:mm", new Date()), -Math.max(0, prepMinutes)), "HH:mm");
 }
 
 export function addBookingMonths(date: Date, count: number) {
