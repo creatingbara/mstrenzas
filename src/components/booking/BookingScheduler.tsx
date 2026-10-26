@@ -24,11 +24,13 @@ type StaffSlot = {
 export function BookingScheduler({
   service,
   bookingData,
-  whatsappPhone
+  whatsappPhone,
+  bookingPolicy
 }: {
   service: Service;
   bookingData: ServiceBookingData;
   whatsappPhone: string;
+  bookingPolicy?: string;
 }) {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -69,6 +71,8 @@ export function BookingScheduler({
       staffMemberId: selectedCalendarStaffId,
       date: selectedDate,
       durationMinutes: service.durationMinutes,
+      prepMinutes: service.prepMinutes,
+      bufferAfterMinutes: service.bufferAfterMinutes,
       staffMembers: bookingData.staffMembers,
       schedulesByStaff
     }).flatMap((group) =>
@@ -87,6 +91,8 @@ export function BookingScheduler({
     selectedDate,
     selectedStaffId,
     service.durationMinutes,
+    service.prepMinutes,
+    service.bufferAfterMinutes,
     service.id
   ]);
 
@@ -115,6 +121,8 @@ export function BookingScheduler({
             serviceId={service.id}
             staffMemberId={selectedCalendarStaffId}
             durationMinutes={service.durationMinutes}
+            prepMinutes={service.prepMinutes}
+            bufferAfterMinutes={service.bufferAfterMinutes}
             staffMembers={bookingData.staffMembers}
             schedulesByStaff={schedulesByStaff}
             selectedDate={selectedDate}
@@ -175,6 +183,7 @@ export function BookingScheduler({
           selectedDate={selectedDate}
           selectedTime={selectedSlot.time}
           whatsappPhone={whatsappPhone}
+          bookingPolicy={bookingPolicy}
           onBooked={(appointment) => {
             setBookedAppointments((current) => ({
               ...current,

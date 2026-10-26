@@ -22,6 +22,7 @@ export function BookingClientForm({
   selectedDate,
   selectedTime,
   whatsappPhone,
+  bookingPolicy,
   onBooked
 }: {
   service: Service;
@@ -30,6 +31,7 @@ export function BookingClientForm({
   selectedDate: Date;
   selectedTime: string;
   whatsappPhone: string;
+  bookingPolicy?: string;
   onBooked: (appointment: AppointmentBooking) => void;
 }) {
   const [successLink, setSuccessLink] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function BookingClientForm({
   const depositMessage =
     service.requiresDeposit && service.depositAmount
       ? `Para asegurar tu espacio, este servicio tiene un anticipo configurado de ${formatPrice(service.depositAmount, false).replace("Desde ", "")}.`
-      : "Para asegurar tu espacio, la cita se confirma con un anticipo del 20%.";
+      : bookingPolicy?.trim() || "El equipo te indicará el anticipo necesario para confirmar este servicio.";
 
   async function onSubmit(values: AppointmentBookingFormValues) {
     setNotice(null);
@@ -69,7 +71,7 @@ export function BookingClientForm({
       `Referencia: ${values.referenceImageUrl ?? ""}`,
       `Comentario: ${values.note ?? ""}`,
       "",
-      "Entiendo que la cita se confirma con el anticipo del 20%.",
+      ...(service.requiresDeposit ? ["Entiendo que debo realizar el anticipo indicado para confirmar la cita."] : []),
       "",
       "Quedo atenta a la confirmación."
     ].join("\n");
@@ -242,32 +244,30 @@ export function BookingClientForm({
           />
         </Field>
       </div>
-      <div
-        className={`mt-5 rounded-lg border p-4 ${
-          errors.depositPolicyAccepted ? "border-red-500 bg-red-50" : "border-cocoa/15 bg-cream"
-        }`}
-      >
-        <div className="flex gap-3">
-          <AlertCircle className="mt-0.5 shrink-0 text-cocoa" size={20} />
-          <div className="grid gap-2 text-sm text-ink">
-            <p className="font-semibold">Anticipo para confirmar tu cita</p>
-            <p className="leading-6 text-muted">
-              {depositMessage} El monto final puede variar segun el servicio, largo, volumen o estilo.
-            </p>
-            <label className="flex items-start gap-2 font-semibold">
-              <input
-                type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-cocoa/30 text-cocoa focus:ring-cocoa/30"
-                {...register("depositPolicyAccepted")}
-              />
-              Entiendo que debo realizar el anticipo para confirmar mi cita.
-            </label>
-            {errors.depositPolicyAccepted && (
-              <span className="text-xs font-medium text-red-600">{errors.depositPolicyAccepted.message}</span>
-            )}
+      {service.requiresDeposit && (
+        <div
+          className={`mt-5 rounded-lg border p-4 ${
+            errors.depositPolicyAccepted ? "border-red-500 bg-red-50" : "border-cocoa/15 bg-cream"
+          }`}
+        >
+          <div className="flex gap-3">
+            <AlertCircle className="mt-0.5 shrink-0 text-cocoa" size={20} />
+            <div className="grid gap-2 text-sm text-ink">
+              <p className="font-semibold">Anticipo para confirmar tu cita</p>
+              <p className="leading-6 text-muted">{depositMessage}</p>
+              <label className="flex items-start gap-2 font-semibold">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 rounded border-cocoa/30 text-cocoa focus:ring-cocoa/30"
+                  {...register("depositPolicyAccepted")}
+                />
+                Entiendo que debo realizar el anticipo para confirmar mi cita.
+              </label>
+              {errors.depositPolicyAccepted && <span className="text-xs font-medium text-red-600">Debes aceptar la politica de anticipo.</span>}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <Button className="mt-5 w-full" type="submit" disabled={isSubmitting || isUploadingReference}>
         <Send size={18} />
         {isSubmitting ? "Enviando..." : "Enviar solicitud"}
