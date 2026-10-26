@@ -27,6 +27,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["pg", "pg-cloudflare"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.supabase.co" },

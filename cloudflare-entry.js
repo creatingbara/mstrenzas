@@ -46,7 +46,7 @@ function isSharedAssetOrApiPath(pathname) {
   );
 }
 
-export default {
+const worker = {
   fetch(request, env, ctx) {
     const url = new URL(request.url);
 
@@ -69,3 +69,5 @@ export default {
     return openNextWorker.fetch(request, env, ctx);
   }
 };
+
+export default worker;

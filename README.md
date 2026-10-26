@@ -25,7 +25,8 @@ Web app profesional para M&S Trenzas: servicios, catálogo, galería, extensione
 2. **SQL Editor** → pega el contenido de [`supabase/schema.sql`](supabase/schema.sql) → **Run**.
    - Crea todas las tablas y los buckets de Storage públicos (`services`, `gallery`, `products`, `booking-references`, `staff-avatars`).
    - Es seguro re-ejecutarlo (usa `create ... if not exists`).
-3. Toma nota de las credenciales:
+3. Ejecuta [`supabase/rls-hardening.sql`](supabase/rls-hardening.sql) después del esquema para activar RLS y cerrar el acceso directo de las claves públicas a tablas sensibles.
+4. Toma nota de las credenciales:
    - **Project Settings → API**: `Project URL`, `anon public key`, `service_role key`.
    - **Project Settings → Database → Connection string → "Transaction pooler"** (puerto **6543**): es la cadena para `SUPABASE_DB_URL`. Reemplaza `[PASSWORD]` por la contraseña de la base de datos.
 
@@ -69,7 +70,7 @@ Abre `http://localhost:3000`. El panel está en `http://localhost:3000/admin/log
 
 ## 4. Deploy en Cloudflare Workers Free
 
-La app se despliega con OpenNext para Cloudflare Workers. No usa `output: "export"` y conserva SSR, route handlers, middleware y el panel administrativo.
+La app se despliega con OpenNext para Cloudflare Workers. No usa `output: "export"` y conserva SSR, route handlers, separación de dominios y el panel administrativo.
 
 ### 4.1 Instalar dependencias
 
@@ -193,7 +194,7 @@ Los secrets del Worker ya se pueden cargar con `pnpm wrangler secret put ...`, p
 
 ### 4.7 Notas del plan Free
 
-- Workers Free sirve bien para una demo, pero tiene limites de CPU, requests y tamaÃ±o de bundle.
+- Workers Free sirve bien para una demo, pero tiene limites de CPU, requests y tamaño de bundle.
 - El proyecto usa Supabase como base de datos y Storage, por lo que Cloudflare no almacena datos de negocio.
 - Esta configuracion usa OpenNext sin cache persistente R2/KV para mantener la demo simple. Si luego necesitas ISR/cache persistente avanzada, agrega R2 o KV segun la documentacion de OpenNext.
 
